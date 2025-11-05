@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JUVO Member Home</title>
+    <meta name="description" content="Explore JUVO services: Elderly Companionship, Pet Caretaking, Personal Chefs, Bodyguards, Friendly Companions, and Personal Errand & Transportation for safe, reliable support.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+</head>
+<body>
+    <header class="m-header">
+        <div class="container m-header-inner">
+            <div class="m-brand">
+                <img src="juvo-logo.jpg" alt="JUVO">
+                <span>JUVO</span>
+            </div>
+            <nav class="m-actions" aria-label="Member navigation">
+                <a href="member.html" aria-current="page">Home</a>
+                <a href="profile.html" id="profileLink">Profile</a>
+                <button class="theme-toggle" id="themeToggle" type="button">
+                    <span class="dot"></span>
+                    <span id="themeLabel">Light</span>
+                </button>
+                <a href="#" id="logoutTop">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="m-subbar">
+            <form id="liveSearch" role="search" aria-label="Search services">
+                <input id="liveQuery" type="text" placeholder="Search services (elderly companion, reading, tech support, grocery, chef, walking, pet care...)" aria-label="Search terms">
+                <button type="submit">Search</button>
+            </form>
+            <button class="juvo-plus-btn" id="openPlus" type="button">JUVO<span>+</span></button>
+            <button class="juvo-plus-btn juvo-plus-btn--filled" id="openCustomService" type="button">
+                <span class="juvo-plus-btn__icon" aria-hidden="true">+</span>
+                <span>Create Custom Request</span>
+            </button>
+        </div>
+
+        <section class="m-section" aria-labelledby="member-overview">
+            <div class="stats-grid" aria-label="Member statistics">
+                <article class="stat-card">
+                    <div class="emoji" aria-hidden="true">👥</div>
+                    <div class="value" id="totalHelpers">15+</div>
+                    <p class="label">Available Helpers</p>
+                </article>
+                <article class="stat-card">
+                    <div class="emoji" aria-hidden="true">✅</div>
+                    <div class="value" id="completedJobs">0</div>
+                    <p class="label">Completed Services</p>
+                </article>
+                <article class="stat-card">
+                    <div class="emoji" aria-hidden="true">⏳</div>
+                    <div class="value" id="pendingJobs">0</div>
+                    <p class="label">Pending Requests</p>
+                </article>
+                <article class="stat-card">
+                    <div class="emoji" aria-hidden="true">⭐</div>
+                    <div class="value">4.9</div>
+                    <p class="label">Average Rating</p>
+                </article>
+            </div>
+
+            <h2 id="member-overview">Browse Categories</h2>
+            <div class="chips" id="chips" role="tablist" aria-label="Quick filters">
+                <button class="chip active" data-q="">All Services</button>
+                <button class="chip" data-q="elderly">Companionship</button>
+                <button class="chip" data-q="reading">Reading</button>
+                <button class="chip" data-q="tech">Tech Support</button>
+                <button class="chip" data-q="grocery">Shopping</button>
+                <button class="chip" data-q="cooking">Cooking</button>
+                <button class="chip" data-q="walking">Fitness</button>
+                <button class="chip" data-q="housekeeping">Housekeeping</button>
+                <button class="chip" data-q="petcare">Pet Care</button>
+            </div>
+
+            <h2>Available Services</h2>
+            <div class="loading" id="loadingServices" hidden>Loading services…</div>
+            <div class="m-cards" id="memberGrid" aria-live="polite"></div>
+            <div class="no-services" id="noResults" hidden>
+                <h3>No services found</h3>
+                <p>Try adjusting your search or filters.</p>
+            </div>
+
+            <h2 class="m-section-subtitle">Your Recent Requests</h2>
+            <div id="recentRequests" class="recent-grid" aria-live="polite"></div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <div class="modal" id="serviceModal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div id="svcTitleRow" class="modal-title-row">
+                    <span id="svcIconInline" class="modal-title-icon" aria-hidden="true"></span>
+                    <span id="svcTitle">Service</span>
+                </div>
+                <button class="close-x" id="closeSvc" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <img id="svcImg" src="images/elderly.png" alt="" class="modal-hero-image">
+                <p id="svcDesc" class="modal-description"></p>
+                <div class="buy-row">
+                    <div class="price" id="svcPrice">₹0</div>
+                    <button class="buy-btn" id="svcRequest" type="button">Request this service</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="requestDetailsModal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div id="requestTitle">Request Service</div>
+                <button class="close-x" id="closeRequestDetails" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="requestDetailsForm" class="modal-form">
+                    <div>
+                        <label for="requestLocation">Location *</label>
+                        <input id="requestLocation" name="location" type="text" required placeholder="e.g. Bandra West, Mumbai">
+                    </div>
+                    <div class="form-inline">
+                        <div>
+                            <label for="requestDate">Preferred date &amp; time</label>
+                            <input id="requestDate" name="scheduled_at" type="datetime-local">
+                        </div>
+                        <div>
+                            <label for="requestPrice">Offer amount (₹)</label>
+                            <input id="requestPrice" name="price" type="number" min="100" step="50" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="requestNotes">Notes for helper</label>
+                        <textarea id="requestNotes" name="notes" rows="3" placeholder="Access instructions or task details"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btnx primary">Submit request</button>
+                        <button type="button" class="btnx ghost" id="closeRequestDetailsBottom">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="customServiceModal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div class="modal-title-row">
+                    <span class="modal-title-icon" aria-hidden="true">✨</span>
+                    <span>Create Custom Request</span>
+                </div>
+                <button class="close-x" id="closeCustomService" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">Tell us what you need and we’ll match you with a helper who can assist right away.</p>
+                <form id="customServiceForm" class="modal-form">
+                    <div>
+                        <label for="customTitle">Title *</label>
+                        <input id="customTitle" name="title" type="text" required placeholder="e.g. Weekly medicine pickup">
+                    </div>
+                    <div>
+                        <label for="customDescription">Describe the task *</label>
+                        <textarea id="customDescription" name="description" rows="3" required placeholder="Share useful context for the helper"></textarea>
+                    </div>
+                    <div>
+                        <label for="customLocation">Location *</label>
+                        <input id="customLocation" name="location" type="text" required placeholder="Neighborhood or full address">
+                    </div>
+                    <div class="form-inline">
+                        <div>
+                            <label for="customSchedule">Preferred date &amp; time</label>
+                            <input id="customSchedule" name="scheduled_at" type="datetime-local">
+                        </div>
+                        <div>
+                            <label for="customPrice">Offer amount (₹) *</label>
+                            <input id="customPrice" name="price" type="number" min="100" step="50" required>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btnx primary">Submit request</button>
+                        <button type="button" class="btnx ghost" id="closeCustomServiceBottom">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="orderConfirmationModal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div class="modal-title-row">
+                    <span class="modal-title-icon" aria-hidden="true">✅</span>
+                    <span>Request booked</span>
+                </div>
+                <button class="close-x" id="closeOrderConfirmation" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="orderInfo" class="order-info"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btnx primary" id="proceedToPay">Proceed to payment</button>
+                    <button type="button" class="btnx ghost" data-close-modal="orderConfirmationModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+    (function() {
+        const toast = document.getElementById('toast');
+        const loadingServices = document.getElementById('loadingServices');
+        const memberGrid = document.getElementById('memberGrid');
+        const noResults = document.getElementById('noResults');
+        const recentContainer = document.getElementById('recentRequests');
+        const profileLink = document.getElementById('profileLink');
+        const totalHelpersEl = document.getElementById('totalHelpers');
+
+        const serviceModal = document.getElementById('serviceModal');
+        const requestModal = document.getElementById('requestDetailsModal');
+        const customServiceModal = document.getElementById('customServiceModal');
+        const orderModal = document.getElementById('orderConfirmationModal');
+        const orderInfo = document.getElementById('orderInfo');
+
+        const svcRequestBtn = document.getElementById('svcRequest');
+        const requestForm = document.getElementById('requestDetailsForm');
+        const requestLocation = document.getElementById('requestLocation');
+        const requestDate = document.getElementById('requestDate');
+        const requestPrice = document.getElementById('requestPrice');
+        const requestNotes = document.getElementById('requestNotes');
+
+        const customServiceForm = document.getElementById('customServiceForm');
+        const customSchedule = document.getElementById('customSchedule');
+
+        const openPlusBtn = document.getElementById('openPlus');
+        const openCustomServiceBtn = document.getElementById('openCustomService');
+        const proceedToPayBtn = document.getElementById('proceedToPay');
+    const chipContainer = document.getElementById('chips');
+
+        const modalCloseMap = [
+            ['closeSvc', serviceModal],
+            ['closeRequestDetails', requestModal],
+            ['closeRequestDetailsBottom', requestModal],
+            ['closeCustomService', customServiceModal],
+            ['closeCustomServiceBottom', customServiceModal],
+            ['closeOrderConfirmation', orderModal]
+        ];
+
+        let pendingServiceId = null;
+        let activeCategory = '';
+        let searchTerm = '';
+
+        const staticServices = [
+            {
+                id: 'elderly-care',
+                title: 'Elderly Companionship',
+                category: 'elderly',
+                icon: '👵',
+                price: 699,
+                image: 'images/senior.jpg',
+                desc: 'Warm companionship for daily routines, medication reminders, and gentle conversation.'
+            },
+            {
+                id: 'reading-buddy',
+                title: 'Reading Buddy',
+                category: 'reading',
+                icon: '📚',
+                price: 499,
+                image: 'images/reading.jpg',
+                desc: 'Shared reading sessions, book club check-ins, and thoughtful discussions at home.'
+            },
+            {
+                id: 'tech-whiz',
+                title: 'At-home Tech Support',
+                category: 'tech',
+                icon: '💻',
+                price: 799,
+                image: 'images/tech.jpg',
+                desc: 'Device setup, software updates, and patient walkthroughs for everyday technology.'
+            },
+            {
+                id: 'grocery-run',
+                title: 'Grocery Run & Essentials',
+                category: 'grocery',
+                icon: '🛒',
+                price: 549,
+                image: 'images/grocerybuddy.jpg',
+                desc: 'Trusted helpers who pick up groceries, medicines, and weekly essentials on time.'
+            },
+            {
+                id: 'home-chef',
+                title: 'Personal Chef at Home',
+                category: 'cooking',
+                icon: '👨‍🍳',
+                price: 1299,
+                image: 'images/chef.jpg',
+                desc: 'Home-style meals cooked in your kitchen with flexible menus and dietary preferences.'
+            },
+            {
+                id: 'morning-walk',
+                title: 'Morning Walk Partner',
+                category: 'walking',
+                icon: '🚶',
+                price: 399,
+                image: 'images/walk.jpg',
+                desc: 'Stay active with a reliable walk partner who keeps the pace and conversation easy.'
+            },
+            {
+                id: 'home-refresh',
+                title: 'Home Refresh & Organising',
+                category: 'housekeeping',
+                icon: '🧺',
+                price: 599,
+                image: 'images/cleaning.jpg',
+                desc: 'Light housekeeping, wardrobe refresh, and decluttering so spaces feel airy again.'
+            },
+            {
+                id: 'pet-pal',
+                title: 'Pet Care & Walks',
+                category: 'petcare',
+                icon: '🐕',
+                price: 499,
+                image: 'images/pet.jpg',
+                desc: 'Daily pet check-ins, playtime, and walks for your furry family members.'
+            }
+        ];
+
+        let serviceData = staticServices.map(enrichService);
+
+        bindStaticEvents();
+        renderServices(serviceData);
+        updateHelpersCount();
+        loadServicesFromAPI();
+        loadUserProfile();
+        loadRecentRequests();
+
+        function bindStaticEvents() {
+            openPlusBtn?.addEventListener('click', (event) => {
+                event.preventDefault();
+                window.location.href = 'Payment.html';
+            });
+
+            openCustomServiceBtn?.addEventListener('click', () => openModal(customServiceModal));
+
+            svcRequestBtn?.addEventListener('click', (event) => {
+                event.preventDefault();
+                const serviceId = svcRequestBtn.getAttribute('data-service') || pendingServiceId;
+                if (!serviceId) {
+                    showToast('Select a service to continue.');
+                    return;
+                }
+                openRequestModal(serviceId);
+            });
+
+            modalCloseMap.forEach(([buttonId, modal]) => {
+                const btn = document.getElementById(buttonId);
+                btn?.addEventListener('click', () => closeModal(modal));
+            });
+
+            document.querySelectorAll('[data-close-modal]').forEach((btn) => {
+                const targetId = btn.getAttribute('data-close-modal');
+                btn.addEventListener('click', () => {
+                    const modal = document.getElementById(targetId);
+                    closeModal(modal);
+                });
+            });
+
+            document.querySelectorAll('.modal').forEach((modal) => {
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) closeModal(modal);
+                });
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    const openModalEl = document.querySelector('.modal.open');
+                    if (openModalEl) closeModal(openModalEl);
+                }
+            });
+
+            const searchForm = document.getElementById('liveSearch');
+            const searchInput = document.getElementById('liveQuery');
+            searchForm?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                searchTerm = (searchInput?.value || '').trim();
+                applyFilters();
+            });
+            searchInput?.addEventListener('input', () => {
+                searchTerm = searchInput.value.trim();
+                applyFilters();
+            });
+
+            memberGrid?.addEventListener('click', (event) => {
+                const target = event.target.closest('[data-service]');
+                if (!target) return;
+                const serviceId = target.getAttribute('data-service');
+                if (serviceId) openServiceModal(serviceId);
+            });
+
+            chipContainer?.addEventListener('click', (event) => {
+                const chip = event.target.closest('.chip');
+                if (!chip) return;
+                const category = chip.getAttribute('data-q') || '';
+                filterByCategory(category);
+            });
+
+                recentContainer?.addEventListener('click', (event) => {
+                    const button = event.target.closest('.js-booking-action');
+                    if (!button) return;
+                    const bookingId = button.getAttribute('data-booking-id');
+                    const action = button.getAttribute('data-action');
+                    if (!bookingId || !action) return;
+
+                    switch (action) {
+                        case 'cancel':
+                            memberCancelBooking(bookingId);
+                            break;
+                        case 'accept-counter':
+                            memberAcceptCounter(bookingId);
+                            break;
+                        case 'decline':
+                            memberDeclineBooking(bookingId);
+                            break;
+                        case 'complete':
+                            memberConfirmCompletion(bookingId);
+                            break;
+                        default:
+                            break;
+                    }
+                });
+
+            requestForm?.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                if (!requestForm.checkValidity()) {
+                    requestForm.reportValidity();
+                    return;
+                }
+                if (!pendingServiceId) {
+                    showToast('Select a service to continue.');
+                    return;
+                }
+
+                const location = requestLocation.value.trim();
+                const priceValue = parseFloat(requestPrice.value);
+                const scheduledAt = requestDate.value ? new Date(requestDate.value).toISOString() : null;
+                const notes = requestNotes.value.trim();
+
+                if (!location) {
+                    showToast('Please add a location.');
+                    requestLocation.focus();
+                    return;
+                }
+                if (Number.isNaN(priceValue) || priceValue <= 0) {
+                    showToast('Enter a valid amount.');
+                    requestPrice.focus();
+                    return;
+                }
+
+                try {
+                    const booking = await createBooking({
+                        serviceId: pendingServiceId,
+                        location,
+                        price: priceValue,
+                        scheduledAt,
+                        notes
+                    });
+                    if (booking) {
+                        const service = serviceData.find((svc) => svc.id === pendingServiceId);
+                        showToast('Request created successfully!');
+                        closeModal(requestModal);
+                        requestForm.reset();
+                        showOrderConfirmation(booking, service?.title || 'Service Request');
+                        await loadRecentRequests();
+                    }
+                } catch (error) {
+                    console.error('Request submission failed', error);
+                }
+            });
+
+            customServiceForm?.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                if (!customServiceForm.checkValidity()) {
+                    customServiceForm.reportValidity();
+                    return;
+                }
+
+                const title = document.getElementById('customTitle').value.trim();
+                const description = document.getElementById('customDescription').value.trim();
+                const location = document.getElementById('customLocation').value.trim();
+                const priceValue = parseFloat(document.getElementById('customPrice').value);
+                const scheduledAt = customSchedule?.value ? new Date(customSchedule.value).toISOString() : null;
+
+                if (!title || !location || Number.isNaN(priceValue) || priceValue <= 0) {
+                    showToast('Please complete the required fields.');
+                    return;
+                }
+
+                try {
+                    const booking = await createBooking({
+                        serviceId: null,
+                        customTitle: title,
+                        customDescription: description,
+                        location,
+                        price: priceValue,
+                        scheduledAt
+                    });
+                    if (booking) {
+                        showToast('Custom service request created!');
+                        closeModal(customServiceModal);
+                        customServiceForm.reset();
+                        showOrderConfirmation(booking, title);
+                        await loadRecentRequests();
+                    }
+                } catch (error) {
+                    console.error('Custom request failed', error);
+                }
+            });
+
+            proceedToPayBtn?.addEventListener('click', () => {
+                const amount = safeLocalStorage('getItem', 'pendingBookingAmount') || '0';
+                window.location.href = `reqpay.html?amount=${amount}`;
+            });
+
+            filterByCategory('');
+        }
+
+        function filterByCategory(category) {
+            activeCategory = category;
+            const chips = document.querySelectorAll('#chips .chip');
+            chips.forEach((chip) => {
+                const chipCategory = chip.getAttribute('data-q') || '';
+                chip.classList.toggle('active', chipCategory === category);
+            });
+            applyFilters();
+        }
+
+        function enrichService(service) {
+            return {
+                ...service,
+                id: String(service.id),
+                titleLower: service.title.toLowerCase(),
+                descLower: service.desc.toLowerCase()
+            };
+        }
+
+        function renderServices(list) {
+            if (!memberGrid) return;
+            if (!list.length) {
+                memberGrid.innerHTML = '';
+                if (noResults) noResults.hidden = false;
+                return;
+            }
+
+            const cards = list.map((service) => `
+                <article class="m-card" data-service="${service.id}">
+                    <div class="ph">
+                        <img src="${service.image}" alt="${service.title}" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <h3><span aria-hidden="true">${service.icon || '✨'}</span> ${service.title}</h3>
+                        <p>${service.desc}</p>
+                        <span class="label">₹${formatRoundedPrice(service.price)}/visit</span>
+                    </div>
+                    <div class="actions">
+                        <button class="btnx primary" data-service="${service.id}" type="button">View details</button>
+                    </div>
+                </article>
+            `).join('');
+
+            memberGrid.innerHTML = cards;
+            if (noResults) noResults.hidden = true;
+        }
+
+        function applyFilters() {
+            const query = searchTerm.toLowerCase();
+            const filtered = serviceData.filter((service) => {
+                const matchesCategory = !activeCategory || service.category === activeCategory;
+                const matchesQuery = !query || service.titleLower.includes(query) || service.descLower.includes(query);
+                return matchesCategory && matchesQuery;
+            });
+            renderServices(filtered);
+        }
+
+        function openServiceModal(serviceId) {
+            const service = serviceData.find((svc) => svc.id === String(serviceId));
+            if (!service) return;
+
+            pendingServiceId = service.id;
+
+            const iconEl = document.getElementById('svcIconInline');
+            const titleEl = document.getElementById('svcTitle');
+            const descEl = document.getElementById('svcDesc');
+            const priceEl = document.getElementById('svcPrice');
+            const imgEl = document.getElementById('svcImg');
+
+            if (iconEl) iconEl.textContent = service.icon || '✨';
+            if (titleEl) titleEl.textContent = service.title;
+            if (descEl) descEl.textContent = service.desc;
+            if (priceEl) priceEl.textContent = `₹${formatRoundedPrice(service.price)}`;
+            if (imgEl) {
+                imgEl.src = service.image;
+                imgEl.alt = service.title;
+            }
+
+            if (requestPrice) requestPrice.value = service.price;
+            if (svcRequestBtn) svcRequestBtn.setAttribute('data-service', service.id);
+
+            openModal(serviceModal);
+        }
+
+        function openRequestModal(serviceId) {
+            pendingServiceId = serviceId;
+            const titleEl = document.getElementById('requestTitle');
+            const service = serviceData.find((svc) => svc.id === String(serviceId));
+            if (titleEl) {
+                titleEl.textContent = service ? `Request: ${service.title}` : 'Request Service';
+            }
+            if (service?.price && requestPrice) requestPrice.value = service.price;
+            openModal(requestModal);
+        }
+
+        function openModal(modal) {
+            if (!modal) return;
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeModal(modal) {
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            if (!document.querySelector('.modal.open')) {
+                document.body.classList.remove('modal-open');
+            }
+        }
+
+        function showToast(message) {
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(window.__toastTimeout);
+            window.__toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2400);
+        }
+
+        function formatRoundedPrice(value) {
+            if (typeof value !== 'number' || Number.isNaN(value)) return '0';
+            return Math.round(value).toLocaleString('en-IN');
+        }
+
+        function formatAmount(cents) {
+            if (typeof cents !== 'number' || Number.isNaN(cents)) return '₹0.00';
+            return `₹${(cents / 100).toFixed(2)}`;
+        }
+
+        function statusMetadata(status) {
+            const normalized = (status || 'unknown').toLowerCase();
+            const className = `status-${normalized.replace(/[^a-z0-9]+/g, '-')}`;
+            const label = normalized.split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+            return { className, label };
+        }
+
+        async function createBooking(options) {
+            const token = safeLocalStorage('getItem', 'token');
+            if (!token) {
+                showToast('Please log in to request services.');
+                throw new Error('Not authenticated');
+            }
+
+            const priceCents = Math.round(options.price * 100);
+            const payload = {
+                location: options.location,
+                offeredPrice_cents: priceCents,
+                scheduled_at: options.scheduledAt || null
+            };
+
+            if (options.notes) payload.notes = options.notes;
+
+            if (options.customTitle) {
+                payload.customServiceTitle = options.customTitle;
+                payload.customServiceDescription = options.customDescription || '';
+            } else if (options.serviceId) {
+                const numericId = Number(options.serviceId);
+                if (!Number.isNaN(numericId)) {
+                    payload.serviceId = numericId;
+                } else {
+                    const svc = serviceData.find((service) => service.id === options.serviceId);
+                    payload.customServiceTitle = svc?.title || String(options.serviceId);
+                    payload.customServiceDescription = svc?.desc || '';
+                }
+            } else {
+                throw new Error('Service information missing');
+            }
+
+            const response = await fetch('/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                const message = error.error || error.message || 'Request failed';
+                showToast(message);
+                throw new Error(message);
+            }
+
+            const booking = await response.json();
+
+            if (booking?.id) {
+                safeLocalStorage('setItem', 'pendingBookingId', booking.id);
+                safeLocalStorage('setItem', 'pendingBookingAmount', (priceCents / 100).toFixed(2));
+                if (options.location) safeLocalStorage('setItem', 'pendingBookingLocation', options.location);
+                const title = options.customTitle || serviceData.find((svc) => svc.id === String(options.serviceId))?.title;
+                if (title) safeLocalStorage('setItem', 'pendingBookingTitle', title);
+            }
+
+            return booking;
+        }
+
+        async function loadServicesFromAPI() {
+            if (loadingServices) loadingServices.hidden = false;
+            try {
+                const response = await fetch('/services', { headers: { 'Accept': 'application/json' } });
+                if (!response.ok) return;
+                const remote = await response.json();
+                if (!Array.isArray(remote) || !remote.length) return;
+
+                serviceData = remote.map((item, index) => enrichService({
+                    id: item.id ?? item.slug ?? `svc-${index}`,
+                    title: item.title || item.name || 'Service',
+                    category: (item.category || item.type || 'general').toLowerCase(),
+                    icon: item.icon || item.emoji || '✨',
+                    price: item.price_cents ? Math.round(item.price_cents / 100) : (item.price || item.base_price || 599),
+                    image: item.image || item.photoUrl || 'images/elderly.png',
+                    desc: item.description || item.summary || 'Friendly help tailored to your needs.'
+                }));
+                updateHelpersCount();
+                applyFilters();
+            } catch (error) {
+                console.log('Falling back to static services', error);
+            } finally {
+                if (loadingServices) loadingServices.hidden = true;
+            }
+        }
+
+        async function loadUserProfile() {
+            const token = safeLocalStorage('getItem', 'token');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!response.ok) return;
+                const user = await response.json();
+                if (profileLink && user.username) {
+                    profileLink.textContent = user.username;
+                }
+            } catch (error) {
+                console.log('Profile load failed', error);
+            }
+        }
+
+        async function loadRecentRequests() {
+            const token = safeLocalStorage('getItem', 'token');
+            if (!token) {
+                renderRecentRequests([]);
+                return;
+            }
+
+            try {
+                const response = await fetch('/bookings/mine', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!response.ok) {
+                    renderRecentRequests([]);
+                    return;
+                }
+                const bookings = await response.json();
+                renderRecentRequests(bookings);
+                updateStats(bookings);
+            } catch (error) {
+                console.log('Failed to load recent requests', error);
+                renderRecentRequests([]);
+            }
+        }
+
+        function renderRecentRequests(bookings) {
+            if (!recentContainer) return;
+
+            if (!bookings.length) {
+                recentContainer.innerHTML = '<p class="recent-empty">No recent requests. Start by requesting a service above!</p>';
+                return;
+            }
+
+            const cards = bookings.slice(0, 6).map((booking) => {
+                const service = booking.serviceId ? serviceData.find((svc) => svc.id === String(booking.serviceId)) : null;
+                const serviceName = service?.title || booking.customServiceTitle || 'Service Request';
+                const amountCents = booking.agreedPrice_cents ?? booking.offeredPrice_cents ?? 0;
+                const status = statusMetadata(booking.status);
+                const actions = [];
+
+                if ((booking.status || '').toLowerCase() === 'pending') {
+                    actions.push(`<button class="btnx danger js-booking-action" data-action="cancel" data-booking-id="${booking.id}">Cancel</button>`);
+                }
+                if ((booking.status || '').toLowerCase() === 'counter_offered') {
+                    actions.push(`<button class="btnx primary js-booking-action" data-action="accept-counter" data-booking-id="${booking.id}">Accept Counter</button>`);
+                    actions.push(`<button class="btnx ghost js-booking-action" data-action="decline" data-booking-id="${booking.id}">Decline</button>`);
+                }
+                if (['accepted', 'in_progress'].includes((booking.status || '').toLowerCase())) {
+                    actions.push(`<button class="btnx primary js-booking-action" data-action="complete" data-booking-id="${booking.id}">Mark Completed</button>`);
+                }
+
+                return `
+                    <article class="recent-card">
+                        <header class="recent-card-header">
+                            <h3 class="recent-card-title">${serviceName}</h3>
+                            <span class="status-pill ${status.className}">${status.label}</span>
+                        </header>
+                        <p class="recent-card-meta"><span aria-hidden="true">📍</span> ${booking.location || 'Not specified'}</p>
+                        <p class="recent-card-amount">${formatAmount(amountCents)}</p>
+                        ${actions.length ? `<div class="recent-card-actions">${actions.join('')}</div>` : ''}
+                    </article>
+                `;
+            }).join('');
+
+            recentContainer.innerHTML = cards;
+        }
+
+        function updateStats(bookings) {
+            const completed = bookings.filter((booking) => (booking.status || '').toLowerCase() === 'completed').length;
+            const pending = bookings.filter((booking) => ['pending', 'counter_offered', 'accepted', 'in_progress'].includes((booking.status || '').toLowerCase())).length;
+
+            const completedEl = document.getElementById('completedJobs');
+            const pendingEl = document.getElementById('pendingJobs');
+
+            if (completedEl) completedEl.textContent = completed;
+            if (pendingEl) pendingEl.textContent = pending;
+        }
+
+        function updateHelpersCount() {
+            if (!totalHelpersEl) return;
+            const computed = Math.max(serviceData.length * 3, 12);
+            totalHelpersEl.textContent = `${computed}+`;
+        }
+
+        function showOrderConfirmation(bookingData, requestLabel) {
+            if (!orderModal || !orderInfo) return;
+
+            const amountCents = bookingData.agreedPrice_cents ?? bookingData.offeredPrice_cents;
+            const status = statusMetadata(bookingData.status);
+            const rows = [];
+
+            if (bookingData.id) {
+                rows.push(renderOrderRow('Request ID', `#${bookingData.id}`));
+            }
+            if (requestLabel) {
+                rows.push(renderOrderRow('Service', requestLabel));
+            }
+            rows.push(renderOrderRow('Status', `<span class="status-pill ${status.className}">${status.label}</span>`));
+            if (bookingData.location) {
+                rows.push(renderOrderRow('Location', bookingData.location));
+            }
+            if (amountCents) {
+                rows.push(renderOrderRow('Amount', formatAmount(amountCents)));
+            }
+            if (bookingData.scheduled_at) {
+                const when = new Date(bookingData.scheduled_at);
+                if (!Number.isNaN(when.valueOf())) {
+                    rows.push(renderOrderRow('Scheduled', when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })));
+                }
+            }
+
+            orderInfo.innerHTML = `
+                <p class="order-intro">We saved the details of your request below. A helper will respond shortly.</p>
+                <div class="order-summary">
+                    ${rows.join('')}
+                </div>
+                <p class="order-note">You can head to payment now or wait until a helper confirms the request.</p>
+            `;
+
+            openModal(orderModal);
+        }
+
+        function renderOrderRow(label, value) {
+            return `
+                <div class="order-row">
+                    <span class="order-label">${label}</span>
+                    <span class="order-value">${value}</span>
+                </div>
+            `;
+        }
+
+        function safeLocalStorage(action, key, value) {
+            try {
+                if (action === 'getItem') return localStorage.getItem(key);
+                if (action === 'setItem') return localStorage.setItem(key, value);
+                if (action === 'removeItem') return localStorage.removeItem(key);
+            } catch (error) {
+                console.warn('LocalStorage access blocked', error);
+            }
+            return null;
+        }
+
+        async function memberCancelBooking(bookingId) {
+            await updateBookingStatus(bookingId, { status: 'cancelled' }, 'Request cancelled.');
+        }
+
+        async function memberAcceptCounter(bookingId) {
+            const token = safeLocalStorage('getItem', 'token');
+            if (!token) {
+                showToast('Please log in to manage requests.');
+                return;
+            }
+            try {
+                const response = await fetch(`/bookings/${bookingId}/accept-counter`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    showToast(error.error || 'Failed to accept counter offer.');
+                    return;
+                }
+                showToast('Counter offer accepted.');
+                await loadRecentRequests();
+            } catch (error) {
+                console.error('Accept counter error', error);
+                showToast('Network error. Please try again.');
+            }
+        }
+
+        async function memberDeclineBooking(bookingId) {
+            await updateBookingStatus(bookingId, { status: 'cancelled' }, 'Request declined.');
+        }
+
+        async function memberConfirmCompletion(bookingId) {
+            await updateBookingStatus(bookingId, { status: 'completed' }, 'Thank you! We marked the service as completed.');
+        }
+
+        async function updateBookingStatus(bookingId, body, successMessage) {
+            const token = safeLocalStorage('getItem', 'token');
+            if (!token) {
+                showToast('Please log in to manage requests.');
+                return;
+            }
+            try {
+                const response = await fetch(`/bookings/${bookingId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    showToast(error.error || 'Failed to update request.');
+                    return;
+                }
+                showToast(successMessage);
+                await loadRecentRequests();
+            } catch (error) {
+                console.error('Booking update error', error);
+                showToast('Network error. Please try again.');
+            }
+        }
+
+        window.memberCancelBooking = memberCancelBooking;
+        window.memberAcceptCounter = memberAcceptCounter;
+        window.memberDeclineBooking = memberDeclineBooking;
+        window.memberConfirmCompletion = memberConfirmCompletion;
+    })();
+    </script>
+</body>
+</html>

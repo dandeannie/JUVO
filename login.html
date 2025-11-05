@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=auth.html">
+    <title>Redirecting to Login - JUVO</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>window.location.href = 'auth.html';</script>
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--color-bg);">
+    <div style="text-align: center;">
+        <h2 style="color: #2a6e4d;">Redirecting to login...</h2>
+        <p>If you are not redirected, <a href="auth.html" style="color: #2a6e4d;">click here</a></p>
+    </div>
+    <div class="nav-root" aria-label="Primary navigation">
+        <div class="hamburger-btn" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="flyout">
+            <a href="index.html#home">Home</a>
+            <a href="index.html#about">About</a>
+            <a href="signup.html">Sign up</a>
+            <button class="theme-toggle" id="themeToggle"><span class="dot"></span>Theme</button>
+        </div>
+    </div>
+
+    <div class="auth-wrap">
+        <div class="double-container">
+            <div class="double-inner">
+                <div class="auth-card">
+                    <div style="display:flex; justify-content:center;">
+                        <div class="auth-tabs">
+                            <a href="login.html" class="active">Login</a>
+                            <a href="signup.html">Sign up</a>
+                        </div>
+                    </div>
+                    <form id="loginForm" novalidate>
+                        <div class="option-list" aria-label="Choose a login method">
+                            <button type="button" class="option-btn" data-mode="email"><span class="dot"></span> Continue with Email</button>
+                            <button type="button" class="option-btn" data-mode="phone"><span class="dot"></span> Continue with Phone</button>
+                        </div>
+                        <div class="input-group">
+                            <input type="email" id="loginEmail" name="email" placeholder="Email" required>
+                            <span class="error-msg" id="emailError"></span>
+                        </div>
+                        <div class="input-group" style="display:none;">
+                            <input type="tel" id="loginPhone" name="phone" placeholder="Phone number" inputmode="tel" pattern="[0-9+\-()\s]{6,}">
+                            <span class="error-msg" id="phoneError"></span>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="loginPassword" name="password" placeholder="Password" required minlength="6">
+                            <span class="error-msg" id="passwordError"></span>
+                        </div>
+                        <div class="auth-actions">
+                            <a href="#" id="forgotPasswordLink">Forgot password?</a>
+                            <button type="submit" class="btn">Login</button>
+                        </div>
+                        <div id="loginMsg" class="auth-msg" aria-live="polite"></div>
+                        <div class="auth-helper-row">Don't have an account? <a href="signup.html">Sign up</a></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h3>JUVO</h3>
+                <p>Connecting workers with opportunities that matter.</p>
+            </div>
+
+            <div class="footer-center">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#contact">Support</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-right">
+                <h4>Contact Us</h4>
+                <p><i class="fas fa-envelope"></i> support@juvo.in</p>
+                <p><i class="fas fa-phone"></i> +91 98765 43210</p>
+                <div class="socials">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-x-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            © <span id="year"></span> JUVO. Login Interface.
+        </div>
+    </footer>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal" id="forgotPasswordModal" aria-hidden="true">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="modal-close" id="forgotPasswordClose">&times;</span>
+            <h3>Reset Password</h3>
+            <p class="muted">Enter your email address and we'll send you instructions to reset your password.</p>
+            <form id="forgotPasswordForm">
+                <div class="input-group">
+                    <input type="email" id="resetEmail" placeholder="Enter your email" required>
+                    <span class="error-msg" id="resetEmailError"></span>
+                </div>
+                <button type="submit" class="btn primary" style="width: 100%; margin-top: 10px;">Send Reset Link</button>
+                <div id="resetMsg" class="auth-msg" style="margin-top: 10px;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Login form validation and handling
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('loginEmail');
+        const phoneInput = document.getElementById('loginPhone');
+        const passwordInput = document.getElementById('loginPassword');
+        const loginMsg = document.getElementById('loginMsg');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        const forgotPasswordClose = document.getElementById('forgotPasswordClose');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const resetEmail = document.getElementById('resetEmail');
+        const resetMsg = document.getElementById('resetMsg');
+
+        let loginMode = 'email';
+
+        // Toggle between email and phone
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const mode = this.getAttribute('data-mode');
+                loginMode = mode;
+                
+                document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                if (mode === 'email') {
+                    emailInput.parentElement.style.display = 'block';
+                    phoneInput.parentElement.style.display = 'none';
+                    emailInput.required = true;
+                    phoneInput.required = false;
+                } else {
+                    emailInput.parentElement.style.display = 'none';
+                    phoneInput.parentElement.style.display = 'block';
+                    emailInput.required = false;
+                    phoneInput.required = true;
+                }
+            });
+        });
+
+        // Set initial mode
+        document.querySelector('.option-btn[data-mode="email"]').classList.add('active');
+
+        // Email validation
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // Password validation
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+
+        // Phone validation
+        function validatePhone(phone) {
+            const re = /^[0-9+\-()\ ]{6,}$/;
+            return re.test(phone);
+        }
+
+        // Show error
+        function showError(input, message) {
+            const errorSpan = input.parentElement.querySelector('.error-msg');
+            if (errorSpan) {
+                errorSpan.textContent = message;
+                errorSpan.style.display = 'block';
+            }
+            input.classList.add('error');
+        }
+
+        // Clear error
+        function clearError(input) {
+            const errorSpan = input.parentElement.querySelector('.error-msg');
+            if (errorSpan) {
+                errorSpan.textContent = '';
+                errorSpan.style.display = 'none';
+            }
+            input.classList.remove('error');
+        }
+
+        // Real-time validation
+        emailInput.addEventListener('blur', function() {
+            if (loginMode === 'email' && this.value) {
+                if (!validateEmail(this.value)) {
+                    showError(this, 'Please enter a valid email address');
+                } else {
+                    clearError(this);
+                }
+            }
+        });
+
+        phoneInput.addEventListener('blur', function() {
+            if (loginMode === 'phone' && this.value) {
+                if (!validatePhone(this.value)) {
+                    showError(this, 'Please enter a valid phone number');
+                } else {
+                    clearError(this);
+                }
+            }
+        });
+
+        passwordInput.addEventListener('blur', function() {
+            if (this.value && !validatePassword(this.value)) {
+                showError(this, 'Password must be at least 6 characters');
+            } else {
+                clearError(this);
+            }
+        });
+
+        // Clear errors on input
+        emailInput.addEventListener('input', () => clearError(emailInput));
+        phoneInput.addEventListener('input', () => clearError(phoneInput));
+        passwordInput.addEventListener('input', () => clearError(passwordInput));
+
+        // Forgot password modal
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            forgotPasswordModal.classList.add('open');
+            forgotPasswordModal.setAttribute('aria-hidden', 'false');
+        });
+
+        forgotPasswordClose.addEventListener('click', function() {
+            forgotPasswordModal.classList.remove('open');
+            forgotPasswordModal.setAttribute('aria-hidden', 'true');
+            resetMsg.textContent = '';
+            resetEmail.value = '';
+        });
+
+        forgotPasswordModal.addEventListener('click', function(e) {
+            if (e.target === forgotPasswordModal) {
+                forgotPasswordClose.click();
+            }
+        });
+
+        // Forgot password form submission
+        forgotPasswordForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = resetEmail.value.trim();
+            
+            if (!validateEmail(email)) {
+                resetMsg.textContent = 'Please enter a valid email address';
+                resetMsg.style.color = 'red';
+                return;
+            }
+            
+            resetMsg.textContent = 'Sending reset link...';
+            resetMsg.style.color = '#2a6e4d';
+            
+            // Simulate sending reset link
+            setTimeout(() => {
+                resetMsg.textContent = '✓ Password reset link sent to your email!';
+                resetMsg.style.color = '#2a6e4d';
+                
+                setTimeout(() => {
+                    forgotPasswordClose.click();
+                }, 2000);
+            }, 1500);
+        });
+    </script>
+</body>
+</html> 

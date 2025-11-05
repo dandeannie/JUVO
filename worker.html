@@ -1,0 +1,4103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>JUVO – Worker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+    --primary: #2a6e4d;
+    --primary-light: #34bfa3;
+    --surface: #fff;
+    --accent: #2a6e4d;
+    --accent-weak: #e9f5ef;
+}
+
+/* Basic layout */
+html, body { 
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    margin: 0; 
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f5f5f5; /* Fallback color */
+    color: #333; /* Fallback color */
+}
+
+/* Flex grow utility */
+.flex-grow {
+    flex-grow: 1;
+}
+
+/* Ensure worker container doesn't have fixed height */
+.worker-container {
+    flex: 1 0 auto;
+    width: 100%;
+}
+
+/* Footer Styles */
+.footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    margin-top: auto;
+    background: #f9f9f9;
+    color: #333;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    margin-top: auto;
+    flex-shrink: 0;
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: 40px 0 20px;
+    margin-top: auto;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    width: 100%;
+}
+
+.footer-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.footer h3, .footer h4 {
+    color: var(--member-accent);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.footer-left {
+    max-width: 300px;
+}
+
+.footer-left p {
+    margin: 10px 0 0;
+    line-height: 1.5;
+    color: var(--color-muted);
+}
+
+.footer-center ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-center li {
+    margin-bottom: 8px;
+}
+
+.footer-center a {
+    color: var(--color-text);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-center a:hover {
+    color: var(--member-accent);
+}
+
+.footer-right p {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text);
+}
+
+.social-links {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.social-links a {
+    color: var(--color-text);
+    font-size: 18px;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.social-links a:hover {
+    color: var(--member-accent);
+    transform: translateY(-2px);
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    color: var(--color-muted);
+    font-size: 14px;
+    width: 100%;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .footer {
+    background: var(--color-surface);
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+.worker-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid rgba(0,0,0,0.08); background:#fff; position:sticky; top:0; z-index:10; }
+.worker-title { font-size:20px; font-weight:700; letter-spacing:0.3px; margin-left:8px; }
+.worker-nav { display:flex; gap:8px; flex-wrap:wrap; }
+.worker-nav .tab { padding:10px 14px; border-radius:10px; border:1px solid rgba(0,0,0,0.08); background:var(--surface); cursor:pointer; transition:0.2s; }
+.worker-nav .tab.active { background: var(--accent-weak); border-color:var(--accent); color:var(--accent); box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+.worker-container { max-width:1100px; margin:24px auto; padding:0 16px; }
+
+/* Panels & cards */
+.panel { display:none; opacity:0; transform:translateY(10px); transition:opacity 0.3s, transform 0.3s; }
+.panel.active { display:block; opacity:1; transform:translateY(0); }
+/* Avoid fixed-position modals being offset by transformed ancestors */
+body.modal-open .panel { transform: none !important; }
+body.modal-open .cardx.visible, body.modal-open .cardx:hover { transform: none !important; }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-bottom:16px; }
+.cardx { border:1px solid rgba(0,0,0,0.08); border-radius:14px; padding:14px; background:var(--surface); transition:transform 0.2s, box-shadow 0.2s; }
+.cardx:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(0,0,0,0.12); }
+.row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.muted { opacity:0.7; font-size:13px; }
+.pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#eef6ff; color:#155e75; font-size:12px; }
+.pill-link { 
+    background: linear-gradient(135deg, #f59e0b, #d97706); 
+    color: #fff; 
+    text-decoration: none; 
+    cursor: pointer; 
+    transition: transform 0.2s, box-shadow 0.2s; 
+    font-weight: 600;
+}
+.pill-link:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); 
+}
+.pill-link:active { 
+    transform: translateY(0); 
+}
+.btn-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.btn-sm { padding:8px 12px; border:1px solid rgba(0,0,0,0.12); border-radius:10px; background:var(--surface); cursor:pointer; transition:0.2s; }
+.btn-sm:hover { transform:scale(1.05); box-shadow:0 4px 10px rgba(0,0,0,0.15); }
+.btn-sm.primary { background:linear-gradient(90deg, var(--primary), var(--primary-light)); border:none; color:#fff; }
+.btn-sm.danger { background:#dc2626; border:none; color:#fff; }
+.btn-sm.danger:hover { background:#b91c1c; }
+.request-card { display:flex; flex-direction:column; gap:12px; padding:18px; margin-block-end:12px; border:1px solid rgba(17,24,39,0.08); border-radius:16px; background:var(--surface); box-shadow:0 2px 10px rgba(15, 23, 42, 0.06); transition:box-shadow 0.25s ease, transform 0.2s ease; }
+.request-card:hover { box-shadow:0 16px 32px rgba(15, 23, 42, 0.12); transform:translateY(-4px); }
+.request-card .request-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; background:#e0f2fe; color:#0369a1; font-weight:500; }
+.request-card .request-meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; font-size:13px; }
+.request-card .request-meta strong { display:block; font-size:14px; color:#0f172a; margin-block-end:1px; }
+.request-card .request-notes { font-size:13px; line-height:1.5; color:rgba(15,23,42,0.72); background:rgba(15,118,110,0.06); border-radius:12px; padding:10px 12px; }
+.request-card .btn-row { justify-content:flex-end; }
+.request-modal { max-inline-size:520px; inline-size:min(94vw,520px); max-block-size:90vh; overflow:auto; }
+.request-modal-body { display:flex; flex-direction:column; gap:16px; margin-block-start:14px; }
+.request-modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.request-modal-header h3 { margin:0; font-size:20px; }
+.request-modal-summary { display:grid; gap:12px; border:1px solid rgba(15,23,42,0.08); border-radius:14px; padding:12px; background:rgba(148,210,189,0.16); }
+.request-modal-summary .row { justify-content:flex-start; gap:16px; }
+.request-modal-summary .summary-block { flex:1; }
+.request-modal-summary .summary-label { display:block; font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:rgba(15,23,42,0.58); margin-block-end:6px; }
+.request-modal-summary .summary-value { font-size:15px; font-weight:600; color:#0f172a; }
+.request-modal-notes { font-size:14px; line-height:1.6; color:rgba(15,23,42,0.78); background:#f8fafc; border-radius:12px; padding:12px; border:1px solid rgba(15,23,42,0.06); }
+.counter-form { display:none; flex-direction:column; gap:10px; padding:12px; border-radius:12px; border:1px dashed rgba(15,23,42,0.15); background:rgba(148,210,189,0.16); }
+.counter-form.active { display:flex; }
+.counter-form label { font-size:13px; font-weight:600; color:#0f172a; }
+.counter-input-wrap { display:flex; align-items:center; gap:8px; border:1px solid rgba(15,23,42,0.18); border-radius:10px; padding:6px 10px; background:#fff; }
+.counter-input-wrap span { font-weight:600; color:#0f172a; }
+.counter-input-wrap input { flex:1; border:none; outline:none; font-size:16px; font-weight:600; background:transparent; color:#0f172a; }
+.counter-help { font-size:12px; color:rgba(15,23,42,0.6); }
+.request-modal-actions { display:flex; justify-content:space-between; align-items:center; margin-block-start:8px; gap:12px; flex-wrap:wrap; }
+.request-modal-actions .btn-sm { min-width:140px; }
+.request-modal-actions .secondary-info { font-size:12px; color:rgba(15,23,42,0.55); }
+.toast { position:fixed; right:24px; bottom:24px; min-width:220px; max-width:320px; padding:14px 18px; border-radius:12px; background:#0f172a; color:#fff; box-shadow:0 12px 24px rgba(15,23,42,0.18); opacity:0; transform:translateY(8px); transition:opacity 0.25s ease, transform 0.25s ease; pointer-events:none; z-index:1500; font-size:14px; }
+.toast.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+.toast-success { background:#15803d; }
+.toast-error { background:#b91c1c; }
+.toast-info { background:#1d4ed8; }
+
+/* Custom Alert Modal */
+.custom-alert-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s ease;
+}
+.custom-alert-overlay.show {
+    display: flex;
+}
+.custom-alert-box {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+    text-align: center;
+}
+.custom-alert-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+.custom-alert-icon.success { color: #10b981; }
+.custom-alert-icon.warning { color: #f59e0b; }
+.custom-alert-icon.info { color: #3b82f6; }
+.custom-alert-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--color-text, #333);
+}
+.custom-alert-message {
+    font-size: 15px;
+    color: var(--color-muted, #666);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+.custom-alert-button {
+    padding: 12px 32px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.custom-alert-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(42, 110, 77, 0.3);
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+[data-theme="dark"] .custom-alert-box {
+    background: #2c2c2e;
+}
+[data-theme="dark"] .custom-alert-title {
+    color: #f0f0f0;
+}
+[data-theme="dark"] .custom-alert-message {
+    color: #ccc;
+}
+[data-theme="dark"] .pill-link {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+[data-theme="dark"] .pill-link:hover {
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.5);
+}
+.grid { display:grid; gap:10px; }
+.grid.cols-7 { grid-template-columns:repeat(7,1fr); }
+.day { border:1px dashed rgba(0,0,0,0.12); border-radius:10px; min-height:72px; padding:8px; font-size:12px; position:relative; cursor:pointer; transition:0.2s; }
+.day:hover { background:#e6f5ef; }
+.day .d { position:absolute; top:6px; right:8px; opacity:0.6; font-size:11px; }
+.slot { margin-top:20px; font-size:12px; background:#f4fff8; border:1px solid #bde5cd; border-radius:8px; padding:4px 6px; }
+
+/* Earnings */
+.earn-box { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:12px; }
+.earn-item { border:1px solid rgba(0,0,0,0.08); border-radius:12px; padding:14px; background:var(--surface); text-align:center; }
+.earn-label { font-size:12px; opacity:0.7; }
+.earn-value { font-size:22px; font-weight:700; }
+
+/* Form */
+.form { display:grid; gap:12px; max-width:640px; }
+.form .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form input, .form select, .form textarea { width:100%; padding:10px 12px; border:1px solid rgba(0,0,0,0.15); border-radius:10px; background:var(--surface); }
+.empty { text-align:center; padding:24px; opacity:0.7; border:1px dashed rgba(0,0,0,0.12); border-radius:12px; }
+
+/* Footer */
+.footer { padding: 40px 0 20px; background: #f9f9f9; color: #333; }
+.footer-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+.footer h3, .footer h4 { color: #2a6e4d; margin-top: 0; margin-bottom: 15px; }
+.footer-left { max-width: 300px; }
+.footer-left p { margin: 10px 0 0; line-height: 1.5; }
+.footer-center ul { list-style: none; padding: 0; margin: 0; }
+.footer-center li { margin-bottom: 8px; }
+.footer-center a { color: #333; text-decoration: none; transition: color 0.2s; }
+.footer-center a:hover { color: #2a6e4d; }
+.footer-right p { margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+.socials { display: flex; gap: 12px; margin-top: 15px; }
+.socials a { color: #2a6e4d; font-size: 18px; transition: opacity 0.2s; }
+.socials a:hover { opacity: 0.8; }
+.footer-bottom { margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); text-align: center; font-size: 14px; }
+
+/* Dark mode styles */
+[data-theme="dark"] .footer { background: #2a3b34; color: #f0f0f0; }
+[data-theme="dark"] .footer h3, 
+[data-theme="dark"] .footer h4 { color: #34bfa3; }
+[data-theme="dark"] .footer-center a { color: #f0f0f0; }
+[data-theme="dark"] .footer-bottom { border-color: rgba(255,255,255,0.1); }
+
+/* Modal */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:4000; opacity:0; transition:opacity 0.16s ease; will-change: opacity; }
+.modal.open { opacity:1; }
+.modal .modal-content, .modal .request-modal { transform: translateY(6px) scale(0.98); opacity:0.98; transition: transform 0.18s ease, opacity 0.18s ease; will-change: transform, opacity; }
+.modal.open .modal-content, .modal.open .request-modal { transform: translateY(0) scale(1); opacity:1; }
+.modal-content { background:#fff; padding:24px; border-radius:12px; max-width:700px; width:94%; position:relative; }
+.modal-content h3 { margin-top:0; }
+.modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:18px; }
+
+/* Custom Dialog Modals (Alert/Confirm) */
+.custom-dialog-modal { 
+    background: rgba(0, 0, 0, 0.75); 
+    backdrop-filter: blur(4px);
+}
+.custom-dialog-box {
+    background: #2c3e50;
+    border-radius: 16px;
+    padding: 28px 32px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    animation: slideInDialog 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    color: #ecf0f1;
+}
+@keyframes slideInDialog {
+    from { transform: translateY(-30px) scale(0.95); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.custom-dialog-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 24px;
+    color: #95a5a6;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+}
+.custom-dialog-close:hover {
+    color: #ecf0f1;
+}
+.custom-dialog-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #95a5a6;
+    margin: 0 0 16px 0;
+    padding-right: 30px;
+}
+.custom-dialog-message {
+    font-size: 15px;
+    color: #ecf0f1;
+    margin: 0 0 24px 0;
+    line-height: 1.5;
+}
+.custom-dialog-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+.custom-dialog-btn {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+.custom-dialog-btn-ok {
+    background: #2a6e4d;
+    color: #fff;
+}
+.custom-dialog-btn-ok:hover {
+    background: #1f5a3e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(42, 110, 77, 0.4);
+}
+.custom-dialog-btn-cancel {
+    background: #34495e;
+    color: #ecf0f1;
+}
+.custom-dialog-btn-cancel:hover {
+    background: #2c3e50;
+    transform: translateY(-1px);
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .custom-dialog-box {
+    background: #1e2832;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .custom-dialog-title {
+    color: #8b95a1;
+}
+[data-theme="dark"] .custom-dialog-message {
+    color: #d4dce6;
+}
+
+/* Light theme */
+[data-theme="light"] .custom-dialog-box {
+    background: #34495e;
+}
+[data-theme="light"] .custom-dialog-btn-cancel {
+    background: #475566;
+}
+
+/* Carousel Styles */
+.job-carousel { display:flex; overflow:hidden; scroll-behavior:smooth;min-height: 300x; }
+.job-card { min-width:290px; margin-right:35px; border:1px solid rgba(0,0,0,0.08); border-radius:12px; background:var(--surface); flex-shrink:0; transition:transform 0.3s;padding-bottom: 16px; }
+.job-card img { width:100%; height:250px; object-fit:cover; border-radius:12px 12px 0 0; }
+.job-card .job-info { padding:8px; }
+.job-card .job-info strong { display:block; margin-bottom:4px; }
+.job-card .job-info .muted { font-size:12px; opacity:0.7; margin-bottom:4px; }
+.carousel-btn { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.1); border:none; font-size:20px; padding:4px 8px; cursor:pointer; border-radius:50%; z-index:5; }
+.carousel-btn.left { left:-10px; }
+.carousel-btn.right { right:-10px; }
+.carousel-btn:hover { background:rgba(0,0,0,0.2); }
+
+/* Profile specific styles */
+.profile-card { padding:24px; border-radius:12px; }
+.profile-section { margin-bottom:12px; }
+.profile-section h3 { margin-top:0; color:var(--accent); }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; }
+.progress-wrap { background:#f1f1f1; border-radius:20px; overflow:hidden; margin:12px 0 8px; height:12px; }
+#progressBar { height:12px; background:var(--primary); width:25%; transition:width 0.25s ease; }
+.tag-btn { padding:6px 10px; border:1px solid var(--primary); border-radius:8px; background:#fff; color:var(--primary); cursor:pointer; }
+.tag-btn.active { background:var(--primary); color:#fff; }
+.profile-summary { display:flex; gap:12px; align-items:flex-start; margin-top:10px; }
+.profile-avatar { width:88px; height:88px; border-radius:12px; object-fit:cover; border:1px solid rgba(0,0,0,0.08); background:#fafafa; }
+.profile-details { flex:1; }
+.small-muted { font-size:12px; opacity:0.7; }
+.file-preview { max-width:120px; max-height:80px; object-fit:cover; border-radius:8px; border:1px solid rgba(0,0,0,0.08); }
+
+/* Theme Toggle */
+.theme-toggle {
+    /* Use the same styling as the .tab class for consistency */
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: var(--surface);
+    color: #333; /* Use default text color */
+    cursor: pointer;
+    transition: 0.2s;
+
+    /* Keep its unique properties */
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.theme-toggle .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--primary); /* Make dot visible on light background */
+}
+/* --- For Dark Mode --- */
+[data-theme="dark"] {
+    /* Redefine your root variables for dark mode */
+    --primary: #34bfa3; /* Brighter green for dark bg */
+    --primary-light: #50d0b5;
+    --surface: #2c2c2e; /* Dark grey for cards/headers */
+    --accent: #34bfa3;
+    --accent-weak: #2a3b34; /* Dark green tint for active tabs */
+}
+
+/* Update base body styles for dark mode */
+[data-theme="dark"] body {
+    background: #1c1c1e;
+    color: #f0f0f0;
+}
+
+/* Update headers, cards, modals, and forms */
+[data-theme="dark"] .worker-header,
+[data-theme="dark"] .cardx,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .form input, 
+[data-theme="dark"] .form select, 
+[data-theme="dark"] .form textarea {
+    background: var(--surface);
+    color: #f0f0f0;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Update nav tabs */
+[data-theme="dark"] .worker-nav .tab,
+[data-theme="dark"] .theme-toggle {
+    background: #3a3a3c;
+    color: #f0f0f0;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .worker-nav .tab.active {
+    background: var(--accent-weak);
+    border-color: var(--accent);
+    color: var(--primary);
+}
+
+[data-theme="dark"] .theme-toggle .dot {
+    background: var(--primary);
+}
+
+/* Update footer */
+[data-theme="dark"] .footer {
+    background: #2a3b34;
+    color: #ccc;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+[data-theme="dark"] .footer h3,
+[data-theme="dark"] .footer h4 {
+    color: var(--primary);
+}
+[data-theme="dark"] .footer a,
+[data-theme="dark"] .socials a,
+[data-theme="dark"] .footer-bottom {
+    color: #ccc;
+}
+/* --- End of Dark Mode Styles --- */
+
+/* Responsive tweaks */
+@media (max-width:640px){
+  .row2 { grid-template-columns:1fr; }
+  .profile-summary { flex-direction:column; align-items:center; text-align:center; }
+}
+</style>
+<link rel="icon" href="juvo-logo.jpg">
+</head>
+<body>
+<div class="worker-header">
+    <div class="row">
+        <img src="juvo-logo.jpg" alt="JUVO" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+        <div class="worker-title">JUVO · Worker</div>
+        <span id="verificationBadge" class="pill" style="display:none; background:#d1fae5; color:#065f46; margin-left:8px;">Verified</span>
+    </div>
+     <div class="worker-nav" role="tablist">
+        <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-overview" id="tab-overview">Overview</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-jobs" id="tab-jobs">Jobs</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-schedule" id="tab-schedule">Schedule</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-earnings" id="tab-earnings">Earnings</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-profile" id="tab-profile">Profile</button>
+        
+        <a href="#" id="logoutWorker" class="tab" style="background: #dc2626; color: white; text-decoration: none; border: none;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+
+        <button class="theme-toggle" id="themeToggle">
+            <span class="dot"></span>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+            <span id="themeLabel">Light</span>
+        </button>
+    </div>
+</div>
+
+<div class="worker-container">
+    <!-- Overview -->
+    <section id="panel-overview" class="panel active" role="tabpanel" aria-labelledby="tab-overview">
+        <div class="cards">
+            <div class="cardx">
+            <div class="row"><strong>Today</strong><span class="pill" id="statusPill" style="background:#94a3b8;color:#fff;">Status: Offline</span></div>
+            <div class="muted" id="pendingRequests">Go online to start receiving requests.</div>
+                <div class="btn-row">
+                    <button class="btn-sm primary" id="goOnlineBtn"><i class="fas fa-wifi"></i> Go Online</button>
+                    <button class="btn-sm" id="setAwayBtn" style="opacity:0.6;cursor:not-allowed;" disabled><i class="fas fa-bed"></i> Set Away</button>
+                    <button class="btn-sm" id="refreshRequests"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+            </div>
+            <div class="cardx">
+                <div class="row"><strong>This Week</strong><span class="pill">Goal: 12 hrs</span></div>
+                <div class="muted">Booked: <strong id="wkBooked">Loading...</strong> • Completed: <strong id="wkCompleted">0</strong></div>
+            </div>
+            <div class="cardx">
+                <div class="row"><strong>Earnings</strong><a href="WorkerPayment.html" class="pill pill-link" title="Upgrade to JUVO+ Worker subscription">JUVO+ <i class="fas fa-crown" style="font-size:10px;"></i></a></div>
+                <div class="muted">This week</div>
+                <div style="font-size:22px;font-weight:700;" id="wkEarnings">₹ 0</div>
+            </div>
+        </div>
+        <div class="cardx">
+            <div class="row"><strong>Quick actions</strong></div>
+            <div class="btn-row">
+                <button class="btn-sm" data-jump="jobs"><i class="fas fa-briefcase"></i> Browse jobs</button>
+                <button class="btn-sm" data-jump="schedule"><i class="fas fa-calendar-alt"></i> Edit availability</button>
+                <button class="btn-sm" data-jump="profile"><i class="fas fa-user"></i> Update profile</button>
+            </div>
+        </div>
+
+        <!-- Real-time Job Requests -->
+        <div class="cardx" style="margin-top:16px;">
+            <div class="row"><strong>Available Job Requests</strong><span class="pill" id="liveIndicator">Live</span></div>
+            <div class="muted">Real-time job requests from members in your area</div>
+            <div id="liveJobRequests" style="margin-top:12px;">
+                <div class="loading" id="loadingRequests">
+                    <i class="fas fa-spinner fa-spin"></i> Loading requests...
+                </div>
+                <div id="noRequests" class="empty-state" style="display:none; padding:20px;">
+                    <i class="fas fa-search"></i>
+                    <p>No job requests available at the moment</p>
+                </div>
+                <div id="requestsList" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="modal" id="requestModal" aria-hidden="true">
+            <div class="modal-content request-modal" role="dialog" aria-modal="true">
+                <div class="request-modal-header">
+                    <h3 id="requestModalTitle">Job Request</h3>
+                    <button type="button" class="modal-close" id="closeRequestModal" aria-label="Close details">&times;</button>
+                </div>
+                <div id="requestModalBody" class="request-modal-body"></div>
+                <div class="request-modal-actions">
+                    <p class="secondary-info" id="requestModalHint">Review the request details, then accept or counter with your rate.</p>
+                    <div class="btn-row">
+                        <button type="button" class="btn-sm" id="modalCounterBtn">Counter Offer</button>
+                        <button type="button" class="btn-sm primary" id="modalAcceptBtn">Accept Request</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Jobs Carousel -->
+        <div class="cardx" style="margin-top:16px;">
+            <div class="row"><strong>Featured Jobs</strong></div>
+            <div style="position:relative; margin-top:10px;">
+                <button class="carousel-btn left">&#10094;</button>
+                <div class="job-carousel" id="jobCarousel"></div>
+                <button class="carousel-btn right">&#10095;</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Profile Completion Check -->
+    <div id="profileCompletionAlert" class="alert" style="display: none; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <strong>Complete Your Profile</strong>
+                <div style="font-size: 14px; margin-top: 4px;">You need to complete your profile before accepting jobs. <a href="#" id="completeProfileLink" style="color: #92400e; text-decoration: underline;">Complete now</a></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jobs -->
+    <section id="panel-jobs" class="panel" role="tabpanel" aria-labelledby="tab-jobs">
+        <div class="row" style="margin-bottom:10px;">
+            <div class="btn-row">
+                <button class="btn-sm primary" id="refreshJobs"><i class="fas fa-sync"></i> Refresh</button>
+                <button class="btn-sm" data-filter="all">All</button>
+                <button class="btn-sm" data-filter="companionship">Companionship</button>
+                <button class="btn-sm" data-filter="chores">Chores</button>
+                <button class="btn-sm" data-filter="tech">Tech help</button>
+                <button class="btn-sm" data-filter="bodyguard">Bodyguard</button>
+                <button class="btn-sm" data-filter="chef">Chef</button>
+            </div>
+            <span class="muted">Showing <span id="jobCount">0</span> jobs</span>
+        </div>
+        <div class="cards" id="jobList"></div>
+        <div class="empty" id="jobsEmpty" style="display:none;">No jobs match your filter.</div>
+        
+        <!-- Active Jobs Section -->
+        <div style="margin-top: 20px;">
+            <h3 style="margin-bottom: 10px;">Your Active Jobs</h3>
+            <div id="activeJobsList" class="cards"></div>
+            <div id="noActiveJobs" class="empty" style="display:none;">No active jobs</div>
+        </div>
+        
+        <!-- Completed Jobs Section -->
+        <div style="margin-top: 20px;">
+            <h3 style="margin-bottom: 10px;">Completed Jobs</h3>
+            <div id="completedJobsList" class="cards"></div>
+            <div id="noCompletedJobs" class="empty" style="display:none;">No completed jobs yet</div>
+        </div>
+        
+    </section>
+
+    <!-- Schedule -->
+    <section id="panel-schedule" class="panel" role="tabpanel" aria-labelledby="tab-schedule">
+        <div class="row" style="margin-bottom:10px;">
+            <strong>Weekly availability</strong>
+            <div class="btn-row">
+                <button class="btn-sm" id="clearAvail">Clear</button>
+                <button class="btn-sm primary" id="saveAvail">Save</button>
+                
+            </div>
+        </div>
+        <!-- Job action modal -->
+        <div class="modal" id="jobActionModal">
+        <div class="modal-content" style="max-width:400px;max-height:1000px;text-align:center;">
+            <span class="modal-close" id="closeJobModal">&times;</span>
+            <h3 id="jobModalTitle">Job Actions</h3>
+            <p id="jobModalInfo" class="muted"></p>
+            <div class="btn-row" style="justify-content:center;margin-top:40px;">
+            <button class="btn-sm" id="removeJobBtn">Remove</button>
+            <button class="btn-sm primary" id="startJobBtn">Start Task</button>
+            </div>
+        </div>
+        </div>
+
+        <div class="grid cols-7" id="calGrid"></div>
+        <div class="muted" style="margin-top:8px;"></div>
+    </section>
+
+    <!-- Earnings -->
+<section id="panel-earnings" class="panel" role="tabpanel" aria-labelledby="tab-earnings">
+  <style>
+    #panel-earnings {
+      padding: 1.5rem;
+      font-family: 'Inter', sans-serif;
+      color: #222;
+      background: #f9fafb;
+    }
+
+    .earn-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .earn-header h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .earn-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .earn-item {
+      background: white;
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+      transition: transform 0.15s ease;
+    }
+
+    .earn-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .earn-label {
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    .earn-value {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-top: 0.25rem;
+      color: #2a6e4d;
+    }
+
+    .progress-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: #e6e6e6;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 68%;
+      background: linear-gradient(90deg, #2a6e4d, #34bfa3);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .cardx {
+      background: white;
+      border-radius: 16px;
+      padding: 1rem 1.2rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .muted {
+      color: #777;
+      font-size: 0.9rem;
+    }
+
+    .btn-sm {
+      padding: 0.3rem 0.6rem;
+      border: none;
+      border-radius: 8px;
+      background: #2a6e4d;
+      color: white;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-sm:hover {
+      background: #1f5a3e;
+    }
+
+    .earn-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    /* Dynamic history list styling */
+    #jobHistorySection { margin-top: 1rem; }
+    #jobHistoryContainer {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 12px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    #jobHistoryContainer > div {
+      background: #ffffff;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    #jobHistoryContainer > div:last-child { margin-bottom: 0; }
+    #jobHistoryContainer strong { color: #1f2937; }
+    #jobHistoryContainer .small-muted { color: #6b7280; font-size: 12px; }
+    
+    /* Badges */
+    .earn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      color: #065f46;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Dark mode adjustments for earnings */
+    [data-theme="dark"] #panel-earnings { background: #111827; color: #e5e7eb; }
+    [data-theme="dark"] .earn-item,
+    [data-theme="dark"] .progress-card,
+    [data-theme="dark"] .cardx { background: #1f2937; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    [data-theme="dark"] .earn-value { color: #34bfa3; }
+    [data-theme="dark"] #jobHistoryContainer { background: #1f2937; border-color: #374151; }
+    [data-theme="dark"] #jobHistoryContainer > div { background: #111827; border-color: #374151; }
+    [data-theme="dark"] #jobHistoryContainer strong { color: #e5e7eb; }
+    [data-theme="dark"] #jobHistoryContainer .small-muted { color: #9ca3af; }
+  </style>
+
+  <div class="earn-header">
+    <h2>Your Earnings</h2>
+    <div style="font-size:0.9rem;color:#777;" id="lastUpdated">Loading...</div>
+  </div>
+
+  <div class="earn-box">
+    <div class="earn-item">
+      <div class="earn-label">This Week</div>
+      <div class="earn-value" id="weekEarnings">₹ 0</div>
+    </div>
+    <div class="earn-item">
+      <div class="earn-label">This Month</div>
+      <div class="earn-value" id="monthEarnings">₹ 0</div>
+    </div>
+    <div class="earn-item">
+      <div class="earn-label">Pending Payout</div>
+      <div class="earn-value" id="pendingEarnings">₹ 0</div>
+    </div>
+  </div>
+
+  <div class="progress-card">
+    <div class="row">
+      <strong>Monthly Goal</strong>
+      <span>₹ 10,600 / ₹ 15,000</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" style="width:74%;"></div>
+    </div>
+    <div class="earn-summary">
+      <span>Keep it up! Almost there.</span>
+      <span>+₹4,400 to goal</span>
+    </div>
+  </div>
+
+  <div class="cardx">
+  <div class="row">
+    <strong>Payout Method</strong>
+    <button class="btn-sm" id="addPayout">Add / Edit</button>
+  </div>
+  <div class="muted" id="payoutSummary">Not set</div>
+</div>
+
+<!-- Bank Details Modal -->
+<div id="payoutModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Enter Bank Details</h3>
+    <form id="payoutForm">
+      <label for="fullName">Full Name:</label>
+      <input type="text" id="fullName" placeholder="As per bank account" required>
+
+      <label for="bankName">Bank Name:</label>
+      <input type="text" id="bankName" required>
+
+      <label for="branch">Branch:</label>
+      <input type="text" id="branch" required>
+
+      <label for="accountNumber">Account Number:</label>
+      <input type="text" id="accountNumber" required>
+
+      <label for="confirmAccountNumber">Confirm Account Number:</label>
+      <input type="text" id="confirmAccountNumber" required>
+
+      <label for="ifsc">IFSC Code:</label>
+      <input type="text" id="ifsc" required>
+
+      <label for="accountType">Account Type:</label>
+      <select id="accountType" required>
+        <option value="">Select Type</option>
+        <option value="Savings">Savings</option>
+        <option value="Current">Current</option>
+      </select>
+
+      <button type="submit" class="btn-sm">Save</button>
+    </form>
+  </div>
+</div>
+
+<style>
+#payoutModal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.5);}
+#payoutModal .modal-content { background-color: #fff; margin:5% auto; padding:20px; border-radius:8px; width:350px; text-align:left;}
+#payoutModal .close { color:#2a6e4d; float:right; font-size:20px; cursor:pointer;}
+#payoutModal .close:hover { color:#000;}
+#payoutModal input, #payoutModal select { width:100%; padding:6px; margin:6px 0; box-sizing:border-box;}
+</style>
+
+<script>
+const addPayoutBtn = document.getElementById('addPayout');
+const payoutModal = document.getElementById('payoutModal');
+const closeModal = document.querySelector('.close');
+const payoutForm = document.getElementById('payoutForm');
+const payoutSummary = document.getElementById('payoutSummary');
+
+// Load saved data from localStorage
+let payoutData = JSON.parse(localStorage.getItem('payoutData')) || null;
+
+function renderPayoutSummary() {
+  if(payoutData){
+    payoutSummary.innerHTML = `
+      <strong>${payoutData.fullName}</strong><br>
+      ${payoutData.bankName} (${payoutData.branch})<br>
+      ${payoutData.accountType} Account: ${payoutData.accountNumber}<br>
+      IFSC: ${payoutData.ifsc}
+    `;
+  } else {
+    payoutSummary.innerText = 'Not set';
+  }
+}
+
+// Initial render
+renderPayoutSummary();
+
+// Open modal
+if (addPayoutBtn) addPayoutBtn.addEventListener('click', function(){
+  if(payoutData){
+    document.getElementById('fullName').value = payoutData.fullName;
+    document.getElementById('bankName').value = payoutData.bankName;
+    document.getElementById('branch').value = payoutData.branch;
+    document.getElementById('accountNumber').value = payoutData.accountNumber;
+    document.getElementById('confirmAccountNumber').value = payoutData.accountNumber;
+    document.getElementById('ifsc').value = payoutData.ifsc;
+    document.getElementById('accountType').value = payoutData.accountType;
+  } else {
+    payoutForm.reset();
+  }
+  payoutModal.style.display = 'block';
+});
+
+// Ensure Step 1 Next works even if inline handlers are blocked or redefined
+window.addEventListener('DOMContentLoaded', function(){
+    var btn = document.getElementById('btnStep1Next');
+    if (btn && !btn.__wired) {
+        btn.addEventListener('click', function(e){ e.preventDefault(); window.nextSection && window.nextSection('fields'); });
+        btn.__wired = true;
+    }
+});
+
+// Close modal
+if (closeModal) closeModal.addEventListener('click', function () { payoutModal.style.display = 'none'; });
+// Use addEventListener to avoid overwriting other global click handlers
+window.addEventListener('click', (e) => { if (e.target == payoutModal) payoutModal.style.display = 'none'; });
+
+// Handle form submission
+payoutForm.onsubmit = (e) => {
+  e.preventDefault();
+
+  const fullName = document.getElementById('fullName').value.trim();
+  const bankName = document.getElementById('bankName').value.trim();
+  const branch = document.getElementById('branch').value.trim();
+  const accountNumber = document.getElementById('accountNumber').value.trim();
+  const confirmAccountNumber = document.getElementById('confirmAccountNumber').value.trim();
+  const ifsc = document.getElementById('ifsc').value.trim();
+  const accountType = document.getElementById('accountType').value;
+
+  if(accountNumber !== confirmAccountNumber){
+    alert("Account numbers do not match!");
+    return;
+  }
+
+  payoutData = { fullName, bankName, branch, accountNumber, ifsc, accountType };
+  
+  // Save to localStorage
+  localStorage.setItem('payoutData', JSON.stringify(payoutData));
+
+  renderPayoutSummary();
+  payoutModal.style.display = 'none';
+};
+</script>
+
+</section>
+
+<!-- Active Tasks Section -->
+<section id="activeTasksSection" style="margin-top: 20px;">
+  <div id="activeTasksContainer"></div>
+</section>
+
+    <!-- Profile -->
+    <section id="panel-profile" class="panel" role="tabpanel" aria-labelledby="tab-profile">
+        <div class="cardx profile-card">
+            <h2 style="margin-top:0;" id="profileHeading">Complete Your Profile</h2>
+            <div class="progress-wrap" aria-hidden="true">
+                <div id="progressBar" style="width:25%"></div>
+            </div>
+            <p class="muted" id="progressText">25% completed</p>
+
+            <!-- STEP 1: Personal -->
+            <div class="profile-section" id="section-personal">
+                <h3>1. Personal Details</h3>
+                <div class="row2">
+                    <input type="text" id="firstName" placeholder="First name" required>
+                    <input type="text" id="lastName" placeholder="Last name" required>
+                </div>
+                <div class="row2">
+                    <input type="text" id="city" placeholder="City" required>
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+                <textarea id="bio" rows="3" placeholder="Short bio"></textarea>
+                <div style="margin-top:8px;">
+                    <label for="photoUpload" class="btn-sm" style="display:inline-block; cursor:pointer;"><i class="fas fa-camera"></i> Upload photo</label>
+                    <input type="file" id="photoUpload" accept="image/*" style="display:none;">
+                    <span id="photoName" class="small-muted" style="margin-left:10px;"></span>
+                </div>
+                <div style="margin-top:12px;">
+                    <button id="btnStep1Next" type="button" class="btn-sm primary">Next →</button>
+                </div>
+                <script>
+                (function(){
+                    const btn = document.getElementById('btnStep1Next');
+                    if (btn && !btn.__wired) {
+                        btn.__wired = true;
+                        btn.addEventListener('click', function(e){
+                            e.preventDefault();
+                            const firstName = document.getElementById('firstName').value.trim();
+                            const lastName = document.getElementById('lastName').value.trim();
+                            const city = document.getElementById('city').value.trim();
+                            const email = document.getElementById('email').value.trim();
+                            
+                            // Validate required fields
+                            if (!firstName || !lastName || !city || !email) {
+                                customAlert('Please complete all required fields: First Name, Last Name, City, and Email.');
+                                return;
+                            }
+                            
+                            // Validate email format
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!emailRegex.test(email)) {
+                                customAlert('Please enter a valid email address.');
+                                return;
+                            }
+                            
+                            // Save Step 1 data
+                            const data = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+                            data.firstName = firstName;
+                            data.lastName = lastName;
+                            data.city = city;
+                            data.email = email;
+                            data.bio = document.getElementById('bio').value.trim();
+                            localStorage.setItem('savedProfile', JSON.stringify(data));
+                            
+                            // Proceed to next section
+                            nextSection('fields');
+                        });
+                    }
+                })();
+                </script>
+            </div>
+
+            <!-- STEP 2: Fields -->
+            <div class="profile-section" id="section-fields" style="display:none;">
+                <h3>2. Fields</h3>
+                <p class="muted">Tell us about your past work and what you want to do on JUVO.</p>
+
+                <div class="row2">
+                    <div>
+                        <label style="font-weight:600;">In which field(s) have you worked in the past?</label>
+                        <div id="pastFields" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+                            <label><input type="checkbox" value="Companionship"> <span>👥 Companionship</span></label>
+                            <label><input type="checkbox" value="Chores"> <span>🧹 Chores / Housekeeping</span></label>
+                            <label><input type="checkbox" value="Tech Help"> <span>💻 Tech Help</span></label>
+                            <label><input type="checkbox" value="Chef"> <span>👨‍🍳 Chef / Cooking</span></label>
+                            <label><input type="checkbox" value="Bodyguard"> <span>🛡️ Bodyguard / Security</span></label>
+                            <label><input type="checkbox" value="Pet Care"> <span>🐾 Pet Care</span></label>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-weight:600;">Which field(s) do you want to work in currently on JUVO?</label>
+                        <div id="currentField" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+                            <label><input type="checkbox" name="juvo_current_field" value="Companionship"> <span>👥 Companionship</span></label>
+                            <label><input type="checkbox" name="juvo_current_field" value="Chores"> <span>🧹 Chores / Housekeeping</span></label>
+                            <label><input type="checkbox" name="juvo_current_field" value="Tech Help"> <span>💻 Tech Help</span></label>
+                            <label><input type="checkbox" name="juvo_current_field" value="Chef"> <span>👨‍🍳 Chef / Cooking</span></label>
+                            <label><input type="checkbox" name="juvo_current_field" value="Bodyguard"> <span>🛡️ Bodyguard / Security</span></label>
+                            <label><input type="checkbox" name="juvo_current_field" value="Pet Care"> <span>🐾 Pet Care</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                // Function to setup Step 2 handlers and restore selections (globally accessible)
+                window.setupStep2 = function setupStep2() {
+                    // restore saved selections
+                    const saved = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+                    const past = Array.isArray(saved.pastFields) ? saved.pastFields : (Array.isArray(saved.expertise) ? saved.expertise : []);
+                    const cur = Array.isArray(saved.currentField) ? saved.currentField : (saved.currentField ? [saved.currentField] : []);
+                    // past checkboxes
+                    document.querySelectorAll('#pastFields input[type="checkbox"]').forEach(cb => {
+                        cb.checked = past.includes(cb.value);
+                    });
+                    // current checkboxes (now supporting multiple)
+                    document.querySelectorAll('#currentField input[type="checkbox"]').forEach(cb => {
+                        cb.checked = cur.includes(cb.value);
+                    });
+
+                    // hook into navigation Next → to store choices before switching sections
+                    const nextBtn = document.getElementById('btnStep2Next');
+                    if (nextBtn && !nextBtn.hasAttribute('data-handler-attached')) {
+                        nextBtn.setAttribute('data-handler-attached', 'true');
+                        nextBtn.addEventListener('click', function(e){
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const selectedPast = Array.from(document.querySelectorAll('#pastFields input[type="checkbox"]:checked')).map(i => i.value);
+                            const selectedCurrent = Array.from(document.querySelectorAll('#currentField input[type="checkbox"]:checked')).map(i => i.value);
+                            
+                            // Validate that at least one current field is selected
+                            if (selectedCurrent.length === 0) {
+                                customAlert('Please select at least one field you want to work in currently on JUVO.');
+                                return;
+                            }
+                            
+                            const data = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+                            data.pastFields = selectedPast;
+                            data.currentField = selectedCurrent;
+                            // for backward compatibility with earlier UI - combine both for expertise
+                            data.expertise = [...new Set([...selectedPast, ...selectedCurrent])];
+                            localStorage.setItem('savedProfile', JSON.stringify(data));
+                            // Also update the profile object
+                            if (window.profile) {
+                                window.profile.fields = data.expertise;
+                            }
+                            // Proceed to next section
+                            if (window.nextSection) {
+                                window.nextSection('proof');
+                            }
+                        });
+                    }
+                    
+                    // Setup back button handler
+                    const backBtn = document.getElementById('btnStep2Back');
+                    if (backBtn && !backBtn.hasAttribute('data-handler-attached')) {
+                        backBtn.setAttribute('data-handler-attached', 'true');
+                        backBtn.addEventListener('click', function(e){
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Save current selections before going back
+                            const selectedPast = Array.from(document.querySelectorAll('#pastFields input[type="checkbox"]:checked')).map(i => i.value);
+                            const selectedCurrent = Array.from(document.querySelectorAll('#currentField input[type="checkbox"]:checked')).map(i => i.value);
+                            const data = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+                            data.pastFields = selectedPast;
+                            data.currentField = selectedCurrent;
+                            localStorage.setItem('savedProfile', JSON.stringify(data));
+                            
+                            if (window.prevSection) {
+                                window.prevSection('personal');
+                            }
+                        });
+                    }
+                }
+                
+                // Setup when DOM is ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        setTimeout(window.setupStep2, 100);
+                    });
+                } else {
+                    setTimeout(window.setupStep2, 100);
+                }
+                </script>
+
+                <div>
+                    <button class="btn-sm primary" id="btnStep2Next">Next →</button>
+                    <button class="btn-sm" id="btnStep2Back">← Back</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Proof -->
+            <div class="profile-section" id="section-proof" style="display:none;">
+                <h3>3. Upload Proof of Identity</h3>
+                <p class="muted">Upload any one of: PAN card, Aadhar, Passport.</p>
+                <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
+                    <label for="proofUpload" class="btn-sm" style="cursor:pointer;"><i class="fas fa-file-upload"></i> Choose file</label>
+                    <input type="file" id="proofUpload" accept="image/*,.pdf" style="display:none;">
+                    <span id="proofName" class="small-muted"></span>
+                </div>
+                <div id="proofPreviewWrap"></div>
+                <div style="margin-top:12px;">
+                    <button class="btn-sm primary" id="btnStep3Next">Next →</button>
+                    <button class="btn-sm" onclick="prevSection('fields')">← Back</button>
+                </div>
+                <script>
+                (function(){
+                    const btn = document.getElementById('btnStep3Next');
+                    if (btn && !btn.__wired) {
+                        btn.__wired = true;
+                        btn.addEventListener('click', function(e){
+                            e.preventDefault();
+                            
+                            // Validate that proof is uploaded
+                            if (!profile.proofData) {
+                                customAlert('Please upload proof of identity before proceeding.');
+                                return;
+                            }
+                            
+                            // Proceed to next section
+                            nextSection('verify');
+                        });
+                    }
+                })();
+                </script>
+            </div>
+
+            <!-- STEP 4: Verify/Submit -->
+            <div class="profile-section" id="section-verify" style="display:none;">
+                <h3>4. Verification</h3>
+                <p class="muted">Review your details and submit for verification.</p>
+                <div id="reviewBlock" style="margin-bottom:12px;"></div>
+                <div>
+                    <button class="btn-sm primary" id="btnSubmitProfile">Submit for Verification</button>
+                    <button class="btn-sm" onclick="prevSection('proof')">← Back</button>
+                </div>
+                <script>
+                // Ensure submit button handler is properly attached
+                (function(){
+                    const submitBtn = document.getElementById('btnSubmitProfile');
+                    if (submitBtn && !submitBtn.hasAttribute('data-handler-attached')) {
+                        submitBtn.setAttribute('data-handler-attached', 'true');
+                        submitBtn.addEventListener('click', function(e){
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (typeof completeProfile === 'function') {
+                                completeProfile();
+                            } else {
+                                alert('Error: Profile submission function not available. Please refresh the page.');
+                            }
+                        });
+                    }
+                })();
+                </script>
+            </div>
+
+            <!-- STEP 5: Complete -->
+            <div class="profile-section" id="section-complete" style="display:none; text-align:center;">
+                <h3>Profile Completed ✅</h3>
+                <p class="muted">Your profile is under verification. You can still update details below.</p>
+                <div style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
+                    <button class="btn-sm primary" id="btnFinishProfile">Finish Profile</button>
+                    <button class="btn-sm" onclick="resetProfile()">Update Profile</button>
+                </div>
+            </div>
+            <script>
+            // Setup Finish Profile button
+            (function(){
+                const finishBtn = document.getElementById('btnFinishProfile');
+                if (finishBtn && !finishBtn.hasAttribute('data-handler-attached')) {
+                    finishBtn.setAttribute('data-handler-attached', 'true');
+                    finishBtn.addEventListener('click', function(e){
+                        e.preventDefault();
+                        // Redirect to overview/home - switch to Overview tab
+                        const overviewTab = document.getElementById('tab-overview');
+                        if (overviewTab) {
+                            overviewTab.click();
+                            // Scroll to top
+                            window.scrollTo({top: 0, behavior: 'smooth'});
+                        } else {
+                            // Fallback: just scroll to top or reload
+                            window.scrollTo({top: 0, behavior: 'smooth'});
+                        }
+                    });
+                }
+            })();
+            </script>
+
+            <!-- Saved profile summary and actions -->
+            <div id="savedProfileArea" style="margin-top:16px; display:none;">
+                <h3 style="margin-bottom:8px;">Saved profile</h3>
+                <div class="cardx profile-summary" id="profileSummary"></div>
+                <div style="margin-top:10px;">
+                    <button class="btn-sm primary" id="openPreviewBtn">Preview</button>
+                    <button class="btn-sm" id="editProfileBtn">Edit</button>
+                    <button class="btn-sm" id="clearProfileBtn">Clear</button>
+                </div>
+                <div id="profileMsg" class="muted" aria-live="polite" style="margin-top:8px;"></div>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+<!-- Custom Alert Modal -->
+<div class="custom-alert-overlay" id="customAlert">
+    <div class="custom-alert-box">
+        <div class="custom-alert-icon" id="alertIcon">✓</div>
+        <div class="custom-alert-title" id="alertTitle">Success</div>
+        <div class="custom-alert-message" id="alertMessage">Operation completed successfully</div>
+        <button class="custom-alert-button" id="alertButton">OK</button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modalPreview">
+    <div class="modal-content">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <div id="previewContent" style="padding:20px;">
+            <!-- Profile preview will be rendered here -->
+        </div>
+    </div>
+</div>
+
+<!-- Job Details Modal (for Active Jobs Details button) -->
+<div class="modal" id="jobDetailsModal" aria-hidden="true">
+    <div class="modal-content" style="max-width:500px;">
+        <span class="modal-close" id="jobDetailsClose">&times;</span>
+        <h3 style="margin-top:0;">Job Details</h3>
+        <div id="jobDetailsBody"></div>
+    </div>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</div>
+
+<!-- Custom Confirm Modal -->
+<div class="modal custom-dialog-modal" id="confirmModal" aria-hidden="true">
+    <div class="custom-dialog-box">
+        <span class="modal-close custom-dialog-close" id="confirmClose">&times;</span>
+        <h3 id="confirmTitle" class="custom-dialog-title">localhost:4000 says</h3>
+        <p id="confirmMessage" class="custom-dialog-message">Are you sure?</p>
+        <div class="custom-dialog-actions">
+            <button class="custom-dialog-btn custom-dialog-btn-cancel" id="confirmCancelBtn">Cancel</button>
+            <button class="custom-dialog-btn custom-dialog-btn-ok" id="confirmOkBtn">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Alert Modal -->
+<div class="modal custom-dialog-modal" id="alertModal" aria-hidden="true">
+    <div class="custom-dialog-box">
+        <span class="modal-close custom-dialog-close" id="alertClose">&times;</span>
+        <h3 id="alertTitle" class="custom-dialog-title">localhost:4000 says</h3>
+        <p id="alertMessage" class="custom-dialog-message"></p>
+        <div class="custom-dialog-actions">
+            <button class="custom-dialog-btn custom-dialog-btn-ok" id="alertOkBtn">OK</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Theme toggle and other initializations
+const yearSpan = document.getElementById('year');
+if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+
+/* -------------------- Custom Alert/Confirm Functions -------------------- */
+// Custom Alert - replaces native alert()
+window.customAlert = function(message) {
+    return new Promise(function(resolve) {
+        const modal = document.getElementById('alertModal');
+        const msg = document.getElementById('alertMessage');
+        const ok = document.getElementById('alertOkBtn');
+        const close = document.getElementById('alertClose');
+        
+        if (!modal || !msg || !ok) {
+            alert(message); // fallback
+            resolve();
+            return;
+        }
+        
+        msg.textContent = message || '';
+        modal.style.display = 'flex';
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        
+        function cleanup() {
+            modal.classList.remove('open');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }, 200);
+            ok.removeEventListener('click', onOk);
+            if (close) close.removeEventListener('click', onOk);
+            modal.removeEventListener('click', onBackdrop);
+            resolve();
+        }
+        
+        function onOk() { cleanup(); }
+        function onBackdrop(e) { if (e.target === modal) cleanup(); }
+        
+        ok.addEventListener('click', onOk);
+        if (close) close.addEventListener('click', onOk);
+        modal.addEventListener('click', onBackdrop);
+    });
+};
+
+// Custom Confirm - replaces native confirm()
+window.customConfirm = function(message) {
+    return new Promise(function(resolve) {
+        const modal = document.getElementById('confirmModal');
+        const msg = document.getElementById('confirmMessage');
+        const ok = document.getElementById('confirmOkBtn');
+        const cancel = document.getElementById('confirmCancelBtn');
+        const close = document.getElementById('confirmClose');
+        
+        if (!modal || !msg || !ok || !cancel) {
+            resolve(confirm(message)); // fallback
+            return;
+        }
+        
+        msg.textContent = message || 'Are you sure?';
+        modal.style.display = 'flex';
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        
+        function cleanup(result) {
+            modal.classList.remove('open');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }, 200);
+            ok.removeEventListener('click', onOk);
+            cancel.removeEventListener('click', onCancel);
+            if (close) close.removeEventListener('click', onCancel);
+            modal.removeEventListener('click', onBackdrop);
+            resolve(result);
+        }
+        
+        function onOk() { cleanup(true); }
+        function onCancel() { cleanup(false); }
+        function onBackdrop(e) { if (e.target === modal) cleanup(false); }
+        
+        ok.addEventListener('click', onOk);
+        cancel.addEventListener('click', onCancel);
+        if (close) close.addEventListener('click', onCancel);
+        modal.addEventListener('click', onBackdrop);
+    });
+};
+
+// Don't auto-override - we'll update specific calls manually
+// window.alert = window.customAlert;
+// window.confirm = window.customConfirm;
+
+/* -------------------- Tabs -------------------- */
+var tabs = Array.from(document.querySelectorAll('.worker-nav .tab'));
+var panels = Array.from(document.querySelectorAll('.panel'));
+function activate(id){
+    tabs.forEach(t => { var on = t.id === 'tab-' + id; t.classList.toggle('active', on); t.setAttribute('aria-selected', on); });
+    panels.forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+}
+tabs.forEach(t => t.addEventListener('click', () => activate(t.id.replace('tab-',''))));
+document.querySelectorAll('[data-jump]').forEach(b => b.addEventListener('click', () => { activate(b.dataset.jump); window.scrollTo({top:0, behavior:'smooth'}); }));
+// Refresh earnings when switching to the tab
+const earnTab = document.getElementById('tab-earnings');
+if (earnTab && !earnTab.hasAttribute('data-handler-attached')) {
+    earnTab.setAttribute('data-handler-attached','true');
+    earnTab.addEventListener('click', function(){
+        if (typeof loadEarningsData === 'function') loadEarningsData();
+    });
+}
+
+var jobs = [
+  // Companionship
+  { id:'j1', type:'companionship', title:'Evening walk & chat', day:'Mon', time:'10:00–12:00<br>Malad West – Inorbit Mall', pay:220, img:'images/walk.jpg' },
+  { id:'j2', type:'companionship', title:'Pet walking', day:'Tue', time:'11:00–13:00<br>Borivali East – Shimpoli Road', pay:200, img:'images/pets.jpg' },
+  { id:'j3', type:'companionship', title:'Senior home visit', day:'Wed', time:'14:00–16:00<br>Andheri West – Lokhandwala Complex', pay:250, img:'images/senior.jpg' },
+  { id:'j4', type:'companionship', title:'Movie night companion', day:'Thu', time:'18:00–20:00<br>Bandra West – Linking Road', pay:220, img:'images/movie.jpg' },
+  { id:'j5', type:'companionship', title:'Dog playdate', day:'Fri', time:'10:00–12:00<br>Chembur – Chembur Gymkhana', pay:200, img:'images/dogplay.jpg' },
+  { id:'j6', type:'companionship', title:'Grocery shopping buddy', day:'Sat', time:'11:00–13:00<br>Vile Parle East – Marve Road', pay:210, img:'images/grocerybuddy.jpg' },
+  { id:'j7', type:'companionship', title:'Reading companion for seniors', day:'Sun', time:'15:00–17:00<br>Mulund West – LBS Road near R Mall', pay:230, img:'images/reading.jpg' },
+  { id:'j8', type:'companionship', title:'Weekend park companion', day:'Sun', time:'10:00–12:00<br>Kurla West – Phoenix Marketcity', pay:220, img:'images/park.jpg' },
+
+  // Chores
+  { id:'j9', type:'chores', title:'Groceries & light organizing', day:'Mon', time:'10:00–12:00<br>Malad West – Infinity Mall', pay:180, img:'images/groceries.jpg' },
+  { id:'j10', type:'chores', title:'Laundry & ironing', day:'Tue', time:'14:00–16:00<br>Borivali West – Kandivali Road', pay:190, img:'images/laundry.jpg' },
+  { id:'j11', type:'chores', title:'House cleaning', day:'Wed', time:'09:00–12:00<br>Andheri East – Marol Naka', pay:200, img:'images/cleaning.jpg' },
+  { id:'j12', type:'chores', title:'Garden watering & light yardwork', day:'Thu', time:'13:00–15:00<br>Bandra West – Carter Road Garden', pay:180, img:'images/garden.jpg' },
+  { id:'j13', type:'chores', title:'Organize garage', day:'Fri', time:'10:00–12:00<br>Chembur – Diamond Garden', pay:200, img:'images/garage.jpg' },
+  { id:'j14', type:'chores', title:'Window cleaning', day:'Sat', time:'09:00–11:00<br>Vile Parle West – Link Road', pay:190, img:'images/window.jpg' },
+  { id:'j15', type:'chores', title:'Car wash & detailing', day:'Sun', time:'11:00–13:00<br>Mulund East – Mulund Gymkhana', pay:220, img:'images/carwash.jpg' },
+  { id:'j16', type:'chores', title:'Pantry restocking', day:'Mon', time:'12:00–14:00<br>Kurla East – Phoenix Marketcity', pay:180, img:'images/pantry.jpg' },
+  { id:'j17', type:'chores', title:'Furniture assembly help', day:'Tue', time:'15:00–17:00<br>Malad West – Orlem', pay:200, img:'images/furniture.jpg' },
+
+  // Tech Help
+  { id:'j18', type:'tech', title:'Phone setup & WhatsApp', day:'Wed', time:'10:00–11:00<br>Borivali East – Kandivali Rd', pay:200 , img:'images/tech.jpg' },
+  { id:'j19', type:'tech', title:'Computer setup & software install', day:'Thu', time:'12:00–14:00<br>Andheri West – Versova', pay:300, img:'images/computer.jpg' },
+  { id:'j20', type:'tech', title:'Smart TV setup', day:'Fri', time:'16:00–18:00<br>Bandra West – Linking Road', pay:250, img:'images/tvsetup.jpg' },
+  { id:'j21', type:'tech', title:'Wi-Fi & router troubleshooting', day:'Sat', time:'10:00–12:00<br>Chembur West – Chembur Gymkhana', pay:280, img:'images/wifi.jpg' },
+  { id:'j22', type:'tech', title:'Software tutoring (Excel, Word, etc.)', day:'Sun', time:'14:00–16:00<br>Vile Parle East – Marve Road', pay:350, img:'images/software.jpg' },
+  { id:'j23', type:'tech', title:'Smart home device setup', day:'Mon', time:'11:00–13:00<br>Mulund West – LBS Rd near R Mall', pay:300, img:'images/smarthome.jpg' },
+  { id:'j24', type:'tech', title:'Printer / scanner setup', day:'Tue', time:'13:00–15:00<br>Kurla West – Phoenix Marketcity', pay:280, img:'images/printer.jpg' },
+  { id:'j25', type:'tech', title:'Troubleshooting home gadgets', day:'Wed', time:'15:00–17:00<br>Malad West – Orlem', pay:250, img:'images/gadgets.jpg' },
+
+  // Bodyguard / Security
+  { id:'j26', type:'bodyguard', title:'Private event security', day:'Thu', time:'18:00–22:00<br>Bandra West – Linking Road', pay:500, img:'images/bodyguards.jpg' },
+  { id:'j27', type:'bodyguard', title:'VIP escort', day:'Fri', time:'14:00–16:00<br>Andheri East – Marol Naka', pay:550, img:'images/escort.jpg' },
+  { id:'j28', type:'bodyguard', title:'Personal protection for appointments', day:'Sat', time:'09:00–11:00<br>Chembur West – Diamond Garden', pay:400, img:'images/protection.jpg' },
+  { id:'j29', type:'bodyguard', title:'Crowd management at events', day:'Sun', time:'16:00–19:00<br>Malad West – Inorbit Mall', pay:600, img:'images/crowd.jpg' },
+  { id:'j30', type:'bodyguard', title:'Security for deliveries / valuables', day:'Mon', time:'13:00–15:00<br>Borivali West – Shimpoli Rd', pay:450, img:'images/delivery.jpg' },
+
+  // Chef / Personal Cook
+  { id:'j31', type:'chef', title:'Personal chef – Dinner prep', day:'Tue', time:'17:00–19:00<br>Andheri West – Lokhandwala Complex', pay:400, img:'images/chefs.jpg' },
+  { id:'j32', type:'chef', title:'Baking & dessert prep', day:'Wed', time:'15:00–17:00<br>Bandra West – Carter Road', pay:350, img:'images/baking.jpg' },
+  { id:'j33', type:'chef', title:'Special diet cooking (keto, vegan, etc.)', day:'Thu', time:'10:00–12:00<br>Chembur East – Chembur Gymkhana', pay:420, img:'images/keto.jpg' },
+  { id:'j34', type:'chef', title:'Party catering for small groups', day:'Fri', time:'18:00–21:00<br>Vile Parle West – Link Rd', pay:450, img:'images/party.jpg' },
+  { id:'j35', type:'chef', title:'Cooking classes at home', day:'Sat', time:'14:00–16:00<br>Mulund East – LBS Rd near R Mall', pay:300, img:'images/cookingclass.jpg' },
+];
+
+// Restore saved state for jobs from localStorage
+try {
+    var savedJobsCache = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+    if (Array.isArray(savedJobsCache) && savedJobsCache.length) {
+        jobs.forEach(function(j){
+            if (savedJobsCache.some(function(s){ return s && s.id === j.id; })) {
+                j.saved = true;
+            }
+        });
+    }
+} catch (e) { /* ignore */ }
+
+
+/* -------------------- Schedule -------------------- */
+var grid = document.getElementById('calGrid');
+var days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+// Create cells for each day
+days.forEach((d, i) => {
+    var cell = document.createElement('div');
+    cell.className = 'day';
+    cell.dataset.day = d;
+    cell.innerHTML = `<div class="d">${d}</div>`;
+    grid.appendChild(cell);
+});
+
+// -------------------- Schedule Click Modal --------------------
+let totalEarnings = 2450; // your starting value
+const earningsDisplay = document.querySelector('#panel-earnings .earn-value'); 
+const jobActionModal = document.getElementById('jobActionModal');
+const closeJobModal = document.getElementById('closeJobModal');
+const jobModalTitle = document.getElementById('jobModalTitle');
+const jobModalInfo = document.getElementById('jobModalInfo');
+let activeJob = null;
+let isJobActive = false;
+
+// -------------------- Create Active Job Banner --------------------
+const activeJobBanner = document.createElement('div');
+activeJobBanner.id = 'activeJobBanner';
+Object.assign(activeJobBanner.style, {
+    display: 'none',
+    background: 'var(--primary)',
+    color: '#fff',
+    padding: '10px 20px',
+    textAlign: 'center',
+    fontWeight: '600',
+    borderRadius: '6px',
+    marginBottom: '15px',
+    position: 'sticky',
+    top: '0',
+    zIndex: '1000'
+});
+document.body.prepend(activeJobBanner);
+
+/// Wait until the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if this is the earnings page by looking for a unique element
+    // Replace '#panel-earnings' with an actual unique element on your earnings page
+    const earningsPanel = document.querySelector('#panel-earnings'); 
+    if (earningsPanel) {
+        // -------------------- Create Job History Section --------------------
+        const jobHistorySection = document.createElement('section');
+        jobHistorySection.id = 'jobHistorySection';
+        jobHistorySection.style.marginTop = '30px';
+        jobHistorySection.innerHTML = `
+          <h3 style="color: var(--primary); margin-bottom: 10px;">Completed Jobs</h3>
+          <div id="jobHistoryContainer" style="
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            background: #fafafa;
+            max-height: 300px;
+            overflow-y: auto;
+          "></div>
+        `;
+        // Append it after the earnings panel
+        earningsPanel.appendChild(jobHistorySection);
+
+        const jobHistoryContainer = document.getElementById('jobHistoryContainer');
+    }
+});
+
+
+// -------------------- Job Modal Handling --------------------
+function openJobModal(job, slotElement) {
+    activeJob = job;
+    jobModalTitle.textContent = job.title;
+    jobModalInfo.textContent = `${job.day} • ${job.time} • ₹${job.pay}`;
+    jobActionModal.style.display = 'flex';
+
+  // Clear previous listeners (guarded)
+  var _removeJobBtn = document.getElementById('removeJobBtn');
+  var _startJobBtn = document.getElementById('startJobBtn');
+  if (_removeJobBtn) _removeJobBtn.onclick = null;
+  if (_startJobBtn) _startJobBtn.onclick = null;
+
+    // Remove Job
+  if (_removeJobBtn) _removeJobBtn.onclick = () => {
+    slotElement.remove(); 
+    jobActionModal.style.display = 'none';
+  };
+
+    // Start Job
+  if (_startJobBtn) _startJobBtn.onclick = () => {
+        if (isJobActive) {
+            alert("You already have an active job. End it before starting another one.");
+            return;
+        }
+
+        slotElement.remove(); 
+        isJobActive = true;
+
+        // Display active job banner
+        const jobTime = new Date().toLocaleString();
+        activeJobBanner.innerHTML = `
+            Currently active: <strong>${job.title}</strong> (${job.time}) Started at <span style="color: white">${jobTime}</span>
+            <button id="endActiveBannerBtn" style="
+                margin-left: 10px; 
+                background: #fff; 
+                color: var(--primary); 
+                border: none; 
+                border-radius: 4px; 
+                padding: 5px 10px; 
+                cursor: pointer;
+                font-weight: 600;">
+                End Task
+            </button>
+        `;
+        activeJobBanner.style.display = 'block';
+
+        const endBannerBtn = document.getElementById('endActiveBannerBtn');
+    if (endBannerBtn) endBannerBtn.onclick = () => {
+            totalEarnings += job.pay;
+            earningsDisplay.textContent = `₹ ${totalEarnings.toLocaleString()}`;
+            isJobActive = false;
+            activeJobBanner.style.display = 'none';
+        
+            // Add to job history
+            const completionTime = new Date().toLocaleString();
+            const jobEntry = document.createElement('div');
+            jobEntry.style.borderBottom = '1px solid #ddd';
+            jobEntry.style.padding = '8px 0';
+            jobEntry.innerHTML = `
+                <strong>${job.title}</strong> (${job.time})<br>
+                ₹${job.pay.toLocaleString()} • Completed on <span style="color: var(--primary)">${completionTime}</span>
+            `;
+            jobHistoryContainer.prepend(jobEntry);
+
+            alert(`Completed "${job.title}"! Earnings updated.`);
+        };
+
+        jobActionModal.style.display = 'none';
+    };
+}
+
+// -------------------- Close modal --------------------
+// Close modal
+if (closeJobModal) closeJobModal.onclick = () => jobActionModal.style.display = 'none';
+// Use addEventListener so we don't clobber other window.onclick handlers
+window.addEventListener('click', e => { if (e.target === jobActionModal) jobActionModal.style.display = 'none'; });
+
+var appliedJobs = {}; // appliedJobs[dayIndex] = [{title,time}]
+var dayMap = { Mon:0, Tue:1, Wed:2, Thu:3, Fri:4, Sat:5, Sun:6 };
+
+var list = document.getElementById('jobList');
+var count = document.getElementById('jobCount');
+var empty = document.getElementById('jobsEmpty');
+function render(items){
+    list.innerHTML='';
+    items.forEach(j=>{
+        var el=document.createElement('div');
+        el.className='cardx';
+        el.innerHTML=`
+            <img src="${j.img}" alt="${j.title}" style="width:100%; height:180px; object-fit:cover; border-radius:12px 12px 0 0;">
+            <div class="job-info" style="padding:8px;">
+                <div class="row"><strong>${j.title}</strong><span class="pill">${j.type}</span></div>
+                <div class="muted">${j.day} ${j.time}</div>
+                <div class="row" style="margin-top:8px;">
+                    <div><strong>₹ ${j.pay || ''}</strong></div>
+                    <div class="btn-row">
+                        <button class="btn-sm primary" data-apply="${j.id}"><i class="fas fa-paper-plane"></i> Apply</button>
+                        <button class="btn-sm" data-save="${j.id}" ${j.saved ? 'disabled' : ''}><i class="fas fa-bookmark"></i> ${j.saved ? 'Saved' : 'Save'}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        list.appendChild(el);
+    });
+    count.textContent=items.length;
+    empty.style.display=items.length?'none':'';
+}
+
+render(jobs);
+document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{
+    var f=b.dataset.filter;
+    render(f==='all'?jobs:jobs.filter(j=>j.type===f));
+}));
+list.addEventListener('click', e => {
+    var t = e.target.closest('button');
+    if(!t) return;
+
+    if(t.dataset.apply){
+        var jobId = t.dataset.apply;
+        var job = jobs.find(j => j.id === jobId);
+        if(!job) return;
+
+        // Find the day index
+        var dayIndex = dayMap[job.day];
+        if(dayIndex === undefined) return;
+
+        // Check if this time slot is already taken
+        var cell = grid.children[dayIndex];
+        var conflict = Array.from(cell.children).some(slot => {
+            return slot.classList.contains('slot') && slot.textContent.includes(job.time);
+        });
+
+        if(conflict){
+            alert('❌ You already have a job booked for this time slot!');
+            return; // don't apply the job
+        }
+
+        // Mark job as applied
+        job.applied = true;
+
+        // Track applied job
+        if(!appliedJobs[dayIndex]) appliedJobs[dayIndex] = [];
+        appliedJobs[dayIndex].push({title: job.title, time: job.time});
+
+        // Add slot to the calendar cell
+        var slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.textContent = `${job.title} (${job.time})`;
+        cell.appendChild(slot);
+        slot.addEventListener('click', () => openJobModal(job, slot));
+
+
+       
+        // Remove the job from the job list
+        render(jobs.filter(j => !j.applied));
+    }
+    else if (t.dataset.save) {
+        var jobIdSave = t.dataset.save;
+        var jobToSave = jobs.find(j => j.id === jobIdSave);
+        if (!jobToSave) return;
+        // mark saved in memory
+        jobToSave.saved = true;
+        // persist to localStorage (dedup by id)
+        try {
+            var existing = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+            if (!Array.isArray(existing)) existing = [];
+            if (!existing.some(function(s){ return s && s.id === jobToSave.id; })) {
+                existing.push({ id: jobToSave.id, title: jobToSave.title, type: jobToSave.type, day: jobToSave.day, time: jobToSave.time, pay: jobToSave.pay, img: jobToSave.img });
+            }
+            localStorage.setItem('savedJobs', JSON.stringify(existing));
+        } catch (err) { /* ignore */ }
+        // update button UI
+        t.textContent = 'Saved';
+        t.disabled = true;
+        // notify
+        if (typeof showToast === 'function') showToast('Job saved to your list.', 'success');
+    }
+});
+
+document.getElementById('refreshJobs').addEventListener('click',()=>render(jobs));
+
+
+document.getElementById('clearAvail').addEventListener('click',()=>{ avail={}; Array.from(grid.querySelectorAll('.slot')).forEach(s=>s.remove()); });
+document.getElementById('saveAvail').addEventListener('click',()=>{ alert('Availability saved (demo): '+JSON.stringify(avail)); });
+
+/* -------------------- Profile: multi-step logic -------------------- */
+var profile = {
+    photoData: null,   // base64 DataURL
+    proofData: null,   // { name, dataUrl (if image) or null }
+    fields: [],
+    saved: false
+};
+
+// Helper function to get user-specific localStorage key
+function getUserProfileKey() {
+    // Try to get user ID from current session
+    let userId = localStorage.getItem('currentUserId');
+    if (!userId) {
+        // Try to extract from token if available
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                userId = payload.id;
+                localStorage.setItem('currentUserId', userId);
+            } catch (e) {
+                userId = 'default';
+            }
+        } else {
+            userId = 'default';
+        }
+    }
+    return 'worker_profile_' + userId;
+}
+
+function updateProgress(){
+    // First check if profile is already complete
+    var isComplete = false;
+    try {
+        var raw = localStorage.getItem(getUserProfileKey());
+        if (raw) {
+            var data = JSON.parse(raw);
+            var hasStep1 = !!(data.first && data.last && data.city && data.email);
+            var hasStep2 = Array.isArray(data.fields) && data.fields.length > 0;
+            var hasStep3 = !!data.proof;
+            isComplete = hasStep1 && hasStep2 && hasStep3;
+        }
+    } catch (e) { /* ignore */ }
+    
+    // Determine current visible section by checking display style
+    var sections = document.querySelectorAll('.profile-section');
+    var visibleId = 'personal';
+    
+    sections.forEach(function(section) {
+        var style = window.getComputedStyle(section);
+        if (style.display !== 'none') {
+            var sectionId = section.id;
+            if (sectionId) {
+                visibleId = sectionId.split('-')[1];
+            }
+        }
+    });
+    
+    var steps = { personal:25, fields:50, proof:75, verify:90, complete:100 };
+    var pct = steps[visibleId] || 25;
+    
+    // If profile is complete, override to 100%
+    if (isComplete && visibleId === 'complete') {
+        pct = 100;
+    }
+    
+    var progressBar = document.getElementById('progressBar');
+    var progressText = document.getElementById('progressText');
+    var profileHeading = document.getElementById('profileHeading');
+    
+    if (progressBar) {
+        progressBar.style.width = pct + '%';
+    }
+    if (progressText) {
+        progressText.textContent = pct + '% completed';
+    }
+    
+    // Update heading based on completion state
+    if (profileHeading) {
+        if (isComplete && visibleId === 'complete') {
+            profileHeading.textContent = 'Profile Completed ✅';
+        } else {
+            profileHeading.textContent = 'Complete Your Profile';
+        }
+    }
+}
+
+window.nextSection = function(id){
+    document.querySelectorAll('.profile-section').forEach(s=>s.style.display='none');
+    var el = document.getElementById('section-'+id);
+    if(el) {
+        el.style.display='block';
+        // Trigger setup for step 2 when it becomes visible
+        if (id === 'fields' && typeof setupStep2 === 'function') {
+            setTimeout(setupStep2, 50);
+        }
+        // Trigger setup for step 4 (verify) submit button
+        if (id === 'verify') {
+            buildReview();
+            // Ensure submit button handler is attached
+            setTimeout(function(){
+                const submitBtn = document.getElementById('btnSubmitProfile');
+                if (submitBtn && !submitBtn.hasAttribute('data-handler-attached')) {
+                    submitBtn.setAttribute('data-handler-attached', 'true');
+                    submitBtn.addEventListener('click', function(e){
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof completeProfile === 'function') {
+                            completeProfile();
+                        } else {
+                            alert('Error: Profile submission function not available. Please refresh the page.');
+                        }
+                    });
+                }
+            }, 50);
+        }
+    }
+    updateProgress();
+    window.scrollTo({top:0, behavior:'smooth'});
+};
+window.prevSection = function(id){
+    document.querySelectorAll('.profile-section').forEach(s=>s.style.display='none');
+    var el = document.getElementById('section-'+id);
+    if(el) {
+        el.style.display='block';
+        // Trigger setup for step 2 when it becomes visible
+        if (id === 'fields' && typeof setupStep2 === 'function') {
+            setTimeout(setupStep2, 50);
+        }
+    }
+    updateProgress();
+    window.scrollTo({top:0, behavior:'smooth'});
+};
+
+function toggleField(btn){
+    btn.classList.toggle('active');
+    var val = btn.textContent.trim();
+    var idx = profile.fields.indexOf(val);
+    if(idx === -1) profile.fields.push(val);
+    else profile.fields.splice(idx,1);
+}
+
+document.getElementById('photoUpload').addEventListener('change', function(e){
+    var f = this.files && this.files[0];
+    if(!f) return;
+    document.getElementById('photoName').textContent = f.name;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+        profile.photoData = ev.target.result;
+    };
+    reader.readAsDataURL(f);
+});
+
+document.getElementById('proofUpload').addEventListener('change', function(e){
+    var f = this.files && this.files[0];
+    if(!f) return;
+    document.getElementById('proofName').textContent = f.name;
+    var entry = { name: f.name, type: f.type, dataUrl: null };
+    if(f.type.startsWith('image/')){
+        var reader = new FileReader();
+        reader.onload = function(ev){
+            entry.dataUrl = ev.target.result;
+            profile.proofData = entry;
+            renderProofPreview();
+        };
+        reader.readAsDataURL(f);
+    } else {
+        profile.proofData = entry;
+        renderProofPreview();
+    }
+});
+
+function renderProofPreview(){
+    var wrap = document.getElementById('proofPreviewWrap');
+    wrap.innerHTML = '';
+    if(!profile.proofData) return;
+    if(profile.proofData.dataUrl){
+        var img = document.createElement('img');
+        img.src = profile.proofData.dataUrl;
+        img.className = 'file-preview';
+        wrap.appendChild(img);
+    } else {
+        var el = document.createElement('div');
+        el.textContent = profile.proofData.name + ' (file)';
+        el.className = 'small-muted';
+        wrap.appendChild(el);
+    }
+}
+
+function buildReview(){
+    var rev = document.getElementById('reviewBlock');
+    rev.innerHTML = '';
+    var fName = document.getElementById('firstName').value || '';
+    var lName = document.getElementById('lastName').value || '';
+    var city = document.getElementById('city').value || '';
+    var email = document.getElementById('email').value || '';
+    var bio = document.getElementById('bio').value || '';
+    
+    // Get fields from savedProfile or profile object
+    const saved = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+    const fieldsList = (profile.fields && profile.fields.length) ? profile.fields.join(', ') : 
+                       (saved.expertise && saved.expertise.length) ? saved.expertise.join(', ') : 
+                       (saved.currentField && saved.currentField.length) ? saved.currentField.join(', ') : 'None selected';
+    
+    var html = `
+        <div><strong>Name:</strong> ${fName} ${lName}</div>
+        <div class="small-muted"><strong>City:</strong> ${city} • <strong>Email:</strong> ${email}</div>
+        <div style="margin-top:8px;"><strong>Bio:</strong> ${bio || 'No bio provided'}</div>
+        <div style="margin-top:8px;"><strong>Fields to work in:</strong> ${fieldsList}</div>
+    `;
+    if(profile.photoData){
+        html += `<div style="margin-top:8px;"><img src="${profile.photoData}" class="file-preview" alt="avatar preview"></div>`;
+    }
+    if(profile.proofData){
+        html += `<div style="margin-top:8px;"><strong>Proof:</strong> ${profile.proofData.name}</div>`;
+    } else {
+        html += `<div style="margin-top:8px; color: #dc2626;"><strong>Proof:</strong> Not uploaded - Please upload proof before submitting</div>`;
+    }
+    rev.innerHTML = html;
+}
+
+async function completeProfile(){
+    try {
+        // Show loading state
+        const submitBtn = document.querySelector('#section-verify .btn-sm.primary');
+        const originalText = submitBtn ? submitBtn.textContent : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+        }
+        
+        // Validate all steps first
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const email = document.getElementById('email').value.trim();
+        
+        if (!firstName || !lastName || !city || !email) {
+            await customAlert('Please complete Step 1: Personal Details.');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+            prevSection('personal');
+            return;
+        }
+        
+        const saved = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+        const currentFields = saved.currentField || [];
+        if (!currentFields || currentFields.length === 0) {
+            await customAlert('Please complete Step 2: Select at least one field to work in.');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+            prevSection('fields');
+            return;
+        }
+        
+        if (!profile.proofData) {
+            await customAlert('Please complete Step 3: Upload proof of identity.');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+            prevSection('proof');
+            return;
+        }
+        
+        // Save profile data (this will also validate and save to server)
+        const success = await saveProfile();
+        
+        // Restore button state
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+        
+        // Only show complete section if save was successful
+        if (success && profile.saved) {
+            document.querySelectorAll('.profile-section').forEach(s=>s.style.display='none');
+            const completeSection = document.getElementById('section-complete');
+            if (completeSection) {
+                completeSection.style.display='block';
+                // Update progress after DOM update
+                setTimeout(function(){
+                    updateProgress();
+                }, 50);
+                renderProfileSummary();
+                
+                // Setup finish button handler if not already attached
+                setTimeout(function(){
+                    const finishBtn = document.getElementById('btnFinishProfile');
+                    if (finishBtn && !finishBtn.hasAttribute('data-handler-attached')) {
+                        finishBtn.setAttribute('data-handler-attached', 'true');
+                        finishBtn.addEventListener('click', function(e){
+                            e.preventDefault();
+                            // Redirect to overview/home - switch to Overview tab
+                            const overviewTab = document.getElementById('tab-overview');
+                            if (overviewTab) {
+                                overviewTab.click();
+                                // Scroll to top
+                                window.scrollTo({top: 0, behavior: 'smooth'});
+                            } else {
+                                // Fallback: just scroll to top
+                                window.scrollTo({top: 0, behavior: 'smooth'});
+                            }
+                        });
+                    }
+                }, 100);
+            }
+        }
+    } catch (error) {
+        console.error('Error in completeProfile:', error);
+        await customAlert('An error occurred while submitting your profile. Please try again.');
+        const submitBtn = document.querySelector('#section-verify .btn-sm.primary');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit for Verification';
+        }
+    }
+}
+
+function resetProfile(){
+    // allow editing again
+    document.querySelectorAll('.profile-section').forEach(s=>s.style.display='none');
+    document.getElementById('section-personal').style.display='block';
+    profile.saved = false;
+    updateProgress();
+}
+
+/* Save / Load */
+function gatherFormData(){
+    const saved = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+    return {
+        first: document.getElementById('firstName').value.trim() || saved.firstName || '',
+        last: document.getElementById('lastName').value.trim() || saved.lastName || '',
+        city: document.getElementById('city').value.trim() || saved.city || '',
+        email: document.getElementById('email').value.trim() || saved.email || '',
+        bio: document.getElementById('bio').value.trim() || saved.bio || '',
+        fields: profile.fields.length ? profile.fields.slice() : (saved.expertise || saved.currentField || []),
+        currentField: saved.currentField || [],
+        pastFields: saved.pastFields || [],
+        photoData: profile.photoData,
+        proof: profile.proofData || null,
+        updatedAt: new Date().toISOString()
+    };
+}
+
+async function saveProfile(){
+    try {
+        var data = gatherFormData();
+        
+        // Validate required fields
+        if (!data.first || !data.last || !data.city || !data.email) {
+            await customAlert('Please complete all required fields in Step 1.');
+            return false;
+        }
+        
+        if (!data.fields || data.fields.length === 0) {
+            await customAlert('Please select at least one field in Step 2.');
+            return false;
+        }
+        
+        if (!data.proof) {
+            await customAlert('Please upload proof of identity in Step 3.');
+            return false;
+        }
+        
+        // Save to local storage first
+        localStorage.setItem(getUserProfileKey(), JSON.stringify(data));
+        
+        // Save to database
+        const token = localStorage.getItem('token');
+        if (!token) {
+            await customAlert('You are not logged in. Please log in again.');
+            return false;
+        }
+        
+        const response = await fetch('/auth/me', {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                    username: (data.first || '') + ' ' + (data.last || ''),
+                    expertise: data.fields || [],
+                    location: data.city || '',
+                    profileCompleted: true
+                })
+        });
+        
+        if (response.ok) {
+            profile.saved = true;
+            document.getElementById('profileMsg').textContent = 'Profile saved and submitted for verification!';
+            document.getElementById('profileMsg').style.color = 'green';
+            document.getElementById('savedProfileArea').style.display = 'block';
+            renderProfileSummary();
+            
+            // Hide profile completion alert
+            const alertEl = document.getElementById('profileCompletionAlert');
+            if (alertEl) {
+                alertEl.style.display = 'none';
+            }
+            
+            // Refresh user data
+            await loadUserData();
+            return true;
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMsg = errorData.error || errorData.message || 'Failed to save profile';
+            await customAlert('Error saving profile: ' + errorMsg);
+            document.getElementById('profileMsg').textContent = 'Error saving profile: ' + errorMsg;
+            document.getElementById('profileMsg').style.color = 'red';
+            return false;
+        }
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        const errorMsg = error.message || 'Unknown error occurred';
+        await customAlert('Error saving profile: ' + errorMsg);
+        document.getElementById('profileMsg').textContent = 'Error saving profile: ' + errorMsg;
+        document.getElementById('profileMsg').style.color = 'red';
+        return false;
+    }
+}
+
+async function loadProfile(){
+    // First try to load from server
+    try {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const response = await fetch('/auth/me', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+            
+            if (response.ok) {
+                const userData = await response.json();
+                
+                // Store user ID for user-specific localStorage
+                if (userData.id) {
+                    localStorage.setItem('currentUserId', userData.id);
+                }
+                
+                // Populate form from server data
+                if (userData.username) {
+                    const nameParts = userData.username.split(' ');
+                    document.getElementById('firstName').value = nameParts[0] || '';
+                    document.getElementById('lastName').value = nameParts.slice(1).join(' ') || '';
+                }
+                if (userData.location) document.getElementById('city').value = userData.location;
+                if (userData.email) document.getElementById('email').value = userData.email;
+                if (userData.expertise && Array.isArray(userData.expertise)) {
+                    profile.fields = userData.expertise;
+                    // Update savedProfile with server data
+                    const saved = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+                    saved.expertise = userData.expertise;
+                    saved.currentField = userData.expertise; // Use expertise as current fields
+                    localStorage.setItem('savedProfile', JSON.stringify(saved));
+                }
+                
+                if (userData.profileCompleted) {
+                    profile.saved = true;
+                    document.getElementById('savedProfileArea').style.display = 'block';
+                    
+                    // If server says profile is complete, show the complete section
+                    setTimeout(function() {
+                        document.querySelectorAll('.profile-section').forEach(s=>s.style.display='none');
+                        const completeSection = document.getElementById('section-complete');
+                        if (completeSection) {
+                            completeSection.style.display='block';
+                            // Update progress to show 100% and correct heading
+                            if (typeof updateProgress === 'function') {
+                                updateProgress();
+                            }
+                        }
+                    }, 200);
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Error loading profile from server:', e);
+    }
+    
+    // Then try to load from localStorage for additional data
+    var raw = localStorage.getItem(getUserProfileKey());
+    if(!raw) return;
+    try {
+        var data = JSON.parse(raw);
+        // populate fields from localStorage (may have more complete data)
+        if (!document.getElementById('firstName').value) document.getElementById('firstName').value = data.first || '';
+        if (!document.getElementById('lastName').value) document.getElementById('lastName').value = data.last || '';
+        if (!document.getElementById('city').value) document.getElementById('city').value = data.city || '';
+        if (!document.getElementById('email').value) document.getElementById('email').value = data.email || '';
+        document.getElementById('bio').value = data.bio || '';
+        if (data.fields && data.fields.length) profile.fields = data.fields;
+        profile.photoData = data.photoData || null;
+        profile.proofData = data.proof || null;
+        
+        // Restore checkbox selections for Step 2
+        const saved = JSON.parse(localStorage.getItem('savedProfile') || '{}');
+        const past = saved.pastFields || [];
+        const cur = Array.isArray(saved.currentField) ? saved.currentField : (saved.currentField ? [saved.currentField] : []);
+        
+        document.querySelectorAll('#pastFields input[type="checkbox"]').forEach(cb => {
+            cb.checked = past.includes(cb.value);
+        });
+        document.querySelectorAll('#currentField input[type="checkbox"]').forEach(cb => {
+            cb.checked = cur.includes(cb.value);
+        });
+        
+        profile.saved = true;
+        if(profile.photoData) document.getElementById('photoName').textContent = 'Photo uploaded';
+        if(profile.proofData) document.getElementById('proofName').textContent = profile.proofData.name || '';
+        renderProofPreview();
+        document.getElementById('savedProfileArea').style.display = 'block';
+        renderProfileSummary();
+        
+        // If profile is complete, show the completed section instead of the form steps
+        const hasStep1 = !!(data.first && data.last && data.city && data.email);
+        const hasStep2 = Array.isArray(data.fields) && data.fields.length > 0;
+        const hasStep3 = !!data.proof;
+        
+        if (hasStep1 && hasStep2 && hasStep3) {
+            // Hide all step sections and show completed section
+            document.querySelectorAll('.profile-section').forEach(s=>s.style.display='none');
+            const completeSection = document.getElementById('section-complete');
+            if (completeSection) {
+                completeSection.style.display='block';
+                // Update progress to show 100% and correct heading
+                setTimeout(function() {
+                    if (typeof updateProgress === 'function') {
+                        updateProgress();
+                    }
+                }, 100);
+            }
+        }
+    } catch(e){
+        console.error('loadProfile error', e);
+    }
+}
+
+function renderProfileSummary(){
+    var raw = localStorage.getItem(getUserProfileKey());
+    var wrap = document.getElementById('profileSummary');
+    if(!raw){ wrap.innerHTML='No profile saved.'; document.getElementById('savedProfileArea').style.display='none'; return; }
+    var data = JSON.parse(raw);
+    wrap.innerHTML = '';
+    var img = document.createElement('img');
+    img.className = 'profile-avatar';
+    img.src = data.photoData || 'juvo-logo.jpg';
+    wrap.appendChild(img);
+    var det = document.createElement('div');
+    det.className = 'profile-details';
+    det.innerHTML = `
+        <strong>${(data.first || '') + ' ' + (data.last || '')}</strong>
+        <div class="small-muted">${data.city || ''} • ${data.email || ''}</div>
+        <div style="margin-top:6px;">${data.bio ? (data.bio.length>140? data.bio.slice(0,140)+'...' : data.bio) : '<span class="small-muted">No bio</span>'}</div>
+        <div style="margin-top:8px;" class="small-muted"><strong>Expertise:</strong> ${(data.fields && data.fields.length) ? data.fields.join(', ') : '—'}</div>
+        <div style="margin-top:6px;" class="small-muted"><strong>Proof:</strong> ${(data.proof && data.proof.name) ? data.proof.name : 'Not uploaded'}</div>
+        <div style="margin-top:8px; font-size:12px; color:#666;">Saved: ${new Date(data.updatedAt || Date.now()).toLocaleString()}</div>
+    `;
+    wrap.appendChild(det);
+}
+
+/* Preview / modal */
+document.getElementById('openPreviewBtn').addEventListener('click', function(){
+    var raw = localStorage.getItem(getUserProfileKey());
+    if(!raw){ alert('No profile saved yet.'); return; }
+    var data = JSON.parse(raw);
+    var html = `
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div>${data.photoData ? '<img src="'+data.photoData+'" style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid rgba(0,0,0,0.08);">' : '<div style="width:120px;height:120px;border-radius:8px;background:#f6f6f6;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,0.06);">No photo</div>'}</div>
+            <div style="flex:1;">
+                <h3 style="margin:0 0 6px 0;">${data.first || ''} ${data.last || ''}</h3>
+                <div style="color:#666;margin-bottom:8px;">${data.city || ''} • ${data.email || ''}</div>
+                <div style="margin-bottom:8px;">${data.bio || ''}</div>
+                <div style="font-size:13px;color:#555;"><strong>Expertise:</strong> ${(data.fields && data.fields.length) ? data.fields.join(', ') : '—'}</div>
+                <div style="margin-top:8px;font-size:13px;color:#555;"><strong>Proof:</strong> ${(data.proof && data.proof.name) ? data.proof.name : 'Not uploaded'}</div>
+            </div>
+        </div>
+    `;
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalPreview').style.display = 'flex';
+});
+
+document.getElementById('editProfileBtn').addEventListener('click', function(){
+    // open first section for editing
+    document.querySelectorAll('.profile-section').forEach(s=>s.style.display='none');
+    document.getElementById('section-personal').style.display='block';
+    updateProgress();
+    window.scrollTo({top:0, behavior:'smooth'});
+});
+
+document.getElementById('clearProfileBtn').addEventListener('click', async function(){
+    if(!await customConfirm('Clear saved profile?')) return;
+    localStorage.removeItem(getUserProfileKey());
+    profile = { photoData:null, proofData:null, fields:[], saved:false };
+    document.getElementById('savedProfileArea').style.display = 'none';
+    document.getElementById('profileMsg').textContent = 'Profile cleared.';
+    document.getElementById('profileMsg').style.color = '#444';
+    // clear form inputs
+    ['firstName','lastName','city','email','bio','photoName','proofName'].forEach(id=>{
+        var el = document.getElementById(id);
+        if(!el) return;
+        if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = '';
+        else el.textContent = '';
+    });
+    document.getElementById('proofPreviewWrap').innerHTML = '';
+    document.querySelectorAll('.tag-btn').forEach(b=>b.classList.remove('active'));
+});
+
+/* modal close */
+document.getElementById('modalClose').addEventListener('click',()=>document.getElementById('modalPreview').style.display='none');
+document.getElementById('modalPreview').addEventListener('click', function(e){
+    if(e.target === this) this.style.display = 'none';
+});
+
+/* save when leaving verify step or when hitting completeProfile: we already call saveProfile there.
+   Also add a keyboard escape to close modal */
+document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') document.getElementById('modalPreview').style.display='none';
+});
+
+// Load user data and check profile completion
+async function loadUserData() {
+    try {
+        const response = await fetch('/auth/me', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        });
+        
+        if (response.ok) {
+            const userData = await response.json();
+            
+            // Store user ID for user-specific localStorage
+            if (userData.id) {
+                localStorage.setItem('currentUserId', userData.id);
+            }
+            
+            // Show verified badge if admin verified
+            try {
+                const badge = document.getElementById('verificationBadge');
+                if (badge) {
+                    if (userData.isVerified) {
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+                // Update complete section message based on verification
+                const completeMsg = document.querySelector('#section-complete p.muted');
+                if (completeMsg) {
+                    if (userData.isVerified) {
+                        completeMsg.textContent = 'Your profile is verified. You can still update details below.';
+                    } else {
+                        completeMsg.textContent = 'Your profile is under verification. You can still update details below.';
+                    }
+                }
+            } catch (e) { /* ignore */ }
+
+            // Decide whether to show the profile completion alert
+            // Consider server flag OR a locally complete profile as sufficient
+            let localComplete = false;
+            try {
+                const raw = localStorage.getItem(getUserProfileKey());
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    const hasStep1 = !!(data.first && data.last && data.city && data.email);
+                    const hasStep2 = Array.isArray(data.fields) && data.fields.length > 0;
+                    const hasStep3 = !!data.proof;
+                    localComplete = hasStep1 && hasStep2 && hasStep3;
+                }
+            } catch (e) { /* ignore */ }
+
+            const showAlert = !(userData && userData.profileCompleted) && !localComplete;
+            document.getElementById('profileCompletionAlert').style.display = showAlert ? 'block' : 'none';
+            
+            return userData;
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
+    }
+}
+
+// Profile completion link handler
+document.getElementById('completeProfileLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    // Switch to profile tab
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.getElementById('tab-profile').classList.add('active');
+    document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+    document.getElementById('panel-profile').classList.add('active');
+});
+
+// Load earnings data
+async function loadEarningsData() {
+    try {
+        const response = await fetch('/bookings/mine', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        });
+        
+        if (response.ok) {
+            const bookings = await response.json();
+            
+            // Calculate earnings from completed bookings
+            const now = new Date();
+            const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            let weekEarnings = 0;
+            let monthEarnings = 0;
+            let pendingEarnings = 0;
+            let completedForHistory = [];
+            
+            bookings.forEach(booking => {
+                // Only count jobs assigned to this worker
+                if (!booking.helperId) return;
+                
+                if (booking.status === 'completed') {
+                    const bookingDate = new Date(booking.created_at || booking.createdAt || booking.scheduled_at);
+                    // Use agreedPrice_cents if available, otherwise acceptedPrice_cents or offeredPrice_cents
+                    const amount = (booking.agreedPrice_cents || booking.acceptedPrice_cents || booking.offeredPrice_cents || 0) / 100;
+                    
+                    if (bookingDate >= weekStart) {
+                        weekEarnings += amount;
+                    }
+                    if (bookingDate >= monthStart) {
+                        monthEarnings += amount;
+                    }
+                    
+                    // For now, all completed jobs are considered pending payout
+                    pendingEarnings += amount;
+                    completedForHistory.push(booking);
+                }
+            });
+            
+            // Update UI - Earnings Tab
+            const weekEarningsEl = document.getElementById('weekEarnings');
+            const monthEarningsEl = document.getElementById('monthEarnings');
+            const pendingEarningsEl = document.getElementById('pendingEarnings');
+            const lastUpdatedEl = document.getElementById('lastUpdated');
+            
+            if (weekEarningsEl) weekEarningsEl.textContent = `₹ ${weekEarnings.toLocaleString('en-IN')}`;
+            if (monthEarningsEl) monthEarningsEl.textContent = `₹ ${monthEarnings.toLocaleString('en-IN')}`;
+            if (pendingEarningsEl) pendingEarningsEl.textContent = `₹ ${pendingEarnings.toLocaleString('en-IN')}`;
+            if (lastUpdatedEl) lastUpdatedEl.textContent = 'Last updated: just now';
+            
+            // Also update Overview card earnings
+            const wkEarningsEl = document.getElementById('wkEarnings');
+            if (wkEarningsEl) wkEarningsEl.textContent = `₹ ${weekEarnings.toLocaleString('en-IN')}`;
+            
+            // Update monthly goal progress
+            const goalAmount = Number(localStorage.getItem('earningsMonthlyGoal') || 15000);
+            const progressPercent = Math.min((monthEarnings / goalAmount) * 100, 100);
+            const progressFillEl = document.querySelector('.progress-fill');
+            if (progressFillEl) progressFillEl.style.width = `${progressPercent}%`;
+            const progressRowSpan = document.querySelector('.progress-card .row span');
+            if (progressRowSpan) progressRowSpan.textContent = `₹ ${monthEarnings.toFixed(0)} / ₹ ${goalAmount.toFixed(0)}`;
+            
+            const remaining = goalAmount - monthEarnings;
+            const goalHintEl = document.querySelector('.earn-summary span:last-child');
+            if (goalHintEl) goalHintEl.textContent = remaining > 0 ? `+₹${remaining.toFixed(0)} to goal` : 'Goal achieved! 🎉';
+
+            // Populate Completed Jobs history within Earnings tab if container exists
+            try {
+                const historyContainer = document.getElementById('jobHistoryContainer');
+                if (historyContainer) {
+                    const items = completedForHistory
+                        .sort((a,b)=> new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0))
+                        .slice(0, 20);
+                    historyContainer.innerHTML = items.map(function(job){
+                        const serviceName = (job.service && job.service.title) || job.customServiceTitle || 'Job';
+                        const amount = (job.agreedPrice_cents || job.acceptedPrice_cents || job.offeredPrice_cents || 0) / 100;
+                        const completedDate = job.updatedAt ? new Date(job.updatedAt).toLocaleString() : (job.createdAt ? new Date(job.createdAt).toLocaleString() : '—');
+                        return `
+                            <div style="padding:8px 0; border-bottom:1px solid #ddd;">
+                                <strong>${serviceName}</strong>
+                                <div class="small-muted">Completed: ${completedDate}</div>
+                                <div><strong>₹ ${amount.toLocaleString('en-IN')}</strong></div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (e) { /* ignore */ }
+        }
+    } catch (error) {
+        console.error('Error loading earnings data:', error);
+    }
+}
+
+// Load active and completed jobs
+async function loadMyJobs() {
+    try {
+        const response = await fetch('/bookings/mine', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        });
+        
+        if (response.ok) {
+            const bookings = await response.json();
+            // store latest for details modal lookup
+            window.__latestBookings = bookings;
+            
+            // Filter jobs by status
+            const activeJobs = bookings.filter(booking => 
+                booking.helperId && ['accepted', 'in_progress'].includes(booking.status)
+            );
+            const completedJobs = bookings.filter(booking => 
+                booking.helperId && booking.status === 'completed'
+            );
+            
+            renderActiveJobs(activeJobs);
+            renderCompletedJobs(completedJobs);
+            // Reflect real bookings in the Schedule grid (no demos)
+            try { renderScheduleFromBookings(bookings); } catch (e) { console.warn('schedule sync failed', e); }
+        }
+    } catch (error) {
+        console.error('Error loading my jobs:', error);
+    }
+}
+
+function renderActiveJobs(jobs) {
+    const container = document.getElementById('activeJobsList');
+    const emptyDiv = document.getElementById('noActiveJobs');
+    
+    if (jobs.length === 0) {
+        container.innerHTML = '';
+        emptyDiv.style.display = 'block';
+        return;
+    }
+    
+    emptyDiv.style.display = 'none';
+    let html = '';
+    
+    jobs.forEach(job => {
+        const serviceName = job.service?.title || job.customServiceTitle || 'Custom Service';
+        const location = job.location || 'Location not specified';
+        const amount = job.agreedPrice_cents ? `₹${(job.agreedPrice_cents / 100).toFixed(2)}` : 'Price TBD';
+        const scheduledDate = job.scheduled_at ? new Date(job.scheduled_at).toLocaleDateString() : 'Not scheduled';
+        
+        html += `
+            <div class="cardx" style="margin-bottom: 12px;">
+                <div class="row" style="margin-bottom: 8px;">
+                    <strong>${serviceName}</strong>
+                    <span class="pill" style="background: ${job.status === 'accepted' ? '#e0f2fe' : '#fff3cd'}; color: ${job.status === 'accepted' ? '#0277bd' : '#856404'};">
+                        ${job.status === 'accepted' ? 'Ready to Start' : 'In Progress'}
+                    </span>
+                </div>
+                <div class="muted" style="margin-bottom: 8px;">
+                    <i class="fas fa-map-marker-alt"></i> ${location}
+                </div>
+                <div class="row" style="margin-bottom: 8px;">
+                    <span><strong>${amount}</strong></span>
+                    <span class="muted">Scheduled: ${scheduledDate}</span>
+                </div>
+                <div class="btn-row">
+                    ${job.status === 'accepted' ? `
+                        <button class="btn-sm primary" data-action="start" data-job-id="${job.id}">
+                            <i class="fas fa-play"></i> Start Job
+                        </button>
+                    ` : `
+                        <button class="btn-sm danger" data-action="complete" data-job-id="${job.id}">
+                            <i class="fas fa-check"></i> Complete Job
+                        </button>
+                    `}
+                    <button class="btn-sm" data-action="details" data-job-id="${job.id}">
+                        <i class="fas fa-eye"></i> Details
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function renderCompletedJobs(jobs) {
+    const container = document.getElementById('completedJobsList');
+    const emptyDiv = document.getElementById('noCompletedJobs');
+    
+    if (jobs.length === 0) {
+        container.innerHTML = '';
+        emptyDiv.style.display = 'block';
+        return;
+    }
+    
+    emptyDiv.style.display = 'none';
+    let html = '';
+    
+    jobs.forEach(job => {
+        const serviceName = job.service?.title || job.customServiceTitle || 'Custom Service';
+        const location = job.location || 'Location not specified';
+        const amount = job.agreedPrice_cents ? `₹${(job.agreedPrice_cents / 100).toFixed(2)}` : 'Price TBD';
+        const completedDate = job.updatedAt ? new Date(job.updatedAt).toLocaleDateString() : 'Unknown';
+        
+        html += `
+            <div class="cardx" style="margin-bottom: 12px;">
+                <div class="row" style="margin-bottom: 8px;">
+                    <strong>${serviceName}</strong>
+                    <span class="pill" style="background: #d1fae5; color: #065f46;">
+                        Completed
+                    </span>
+                </div>
+                <div class="muted" style="margin-bottom: 8px;">
+                    <i class="fas fa-map-marker-alt"></i> ${location}
+                </div>
+                <div class="row" style="margin-bottom: 8px;">
+                    <span><strong>${amount}</strong></span>
+                    <span class="muted">Completed: ${completedDate}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Event delegation for Active Jobs actions (CSP-safe, no inline handlers)
+(function(){
+    const container = document.getElementById('activeJobsList');
+    if (container && !container.hasAttribute('data-handler-attached')) {
+        container.setAttribute('data-handler-attached', 'true');
+        container.addEventListener('click', function(e){
+            const btn = e.target && e.target.closest && e.target.closest('button[data-action]');
+            if (!btn) return;
+            const jobId = btn.getAttribute('data-job-id');
+            const action = btn.getAttribute('data-action');
+            if (!jobId) return;
+            if (action === 'start' && typeof startJob === 'function') { startJob(Number(jobId)); return; }
+            if (action === 'complete' && typeof completeJob === 'function') { completeJob(Number(jobId)); return; }
+            if (action === 'details' && typeof viewJobDetails === 'function') { viewJobDetails(Number(jobId)); return; }
+        });
+    }
+})();
+
+// Reusable confirm modal helper
+function confirmAction(message, okLabel, cancelLabel){
+    return new Promise(function(resolve){
+        const modal = document.getElementById('confirmModal');
+        const msg = document.getElementById('confirmMessage');
+        const ok = document.getElementById('confirmOkBtn');
+        const cancel = document.getElementById('confirmCancelBtn');
+        const close = document.getElementById('confirmClose');
+        if (!modal || !msg || !ok || !cancel) {
+            resolve(window.confirm(message || 'Are you sure?'));
+            return;
+        }
+        msg.textContent = message || 'Are you sure?';
+        if (okLabel) ok.textContent = okLabel;
+        if (cancelLabel) cancel.textContent = cancelLabel;
+        modal.style.display = 'flex';
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden','false');
+        function cleanup(result){
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden','true');
+            ok.removeEventListener('click', onOk);
+            cancel.removeEventListener('click', onCancel);
+            if (close) close.removeEventListener('click', onCancel);
+            modal.removeEventListener('click', onBackdrop);
+            resolve(result);
+        }
+        function onOk(){ cleanup(true); }
+        function onCancel(){ cleanup(false); }
+        function onBackdrop(e){ if (e.target === modal) cleanup(false); }
+        ok.addEventListener('click', onOk);
+        cancel.addEventListener('click', onCancel);
+        if (close) close.addEventListener('click', onCancel);
+        modal.addEventListener('click', onBackdrop);
+    });
+}
+
+// -------------------- Schedule sync from real bookings --------------------
+function clearScheduleSlots(){
+    try {
+        if (!grid) return;
+        Array.from(grid.querySelectorAll('.slot')).forEach(function(s){ s.remove(); });
+    } catch (e) { /* ignore */ }
+}
+
+function renderScheduleFromBookings(bookings){
+    if (!Array.isArray(bookings) || !grid || !grid.children) return;
+    clearScheduleSlots();
+    bookings.forEach(function(booking){
+        if (!booking || !booking.helperId) return; // only worker's jobs
+        var when = booking.scheduled_at ? new Date(booking.scheduled_at) : null;
+        if (!when || isNaN(when.getTime())) return; // skip unscheduled
+        var jsDay = when.getDay(); // 0=Sun..6=Sat
+        var dayIndex = (jsDay + 6) % 7; // map to Mon..Sun grid
+        var cell = grid.children[dayIndex];
+        if (!cell) return;
+        var title = (booking.service && booking.service.title) || booking.customServiceTitle || 'Job';
+        var timeLabel = when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // prevent duplicates
+        var exists = Array.from(cell.querySelectorAll('.slot')).some(function(el){ return el.textContent.includes(title) && el.textContent.includes(timeLabel); });
+        if (exists) return;
+        var slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.textContent = title + ' (' + timeLabel + ')';
+        cell.appendChild(slot);
+        // click -> job modal if available
+        try {
+            var displayJob = {
+                title: title,
+                day: cell.dataset.day || '',
+                time: timeLabel,
+                pay: Math.round(((booking.agreedPrice_cents || booking.acceptedPrice_cents || booking.offeredPrice_cents || 0))/100)
+            };
+            if (typeof openJobModal === 'function') {
+                slot.addEventListener('click', function(){ openJobModal(displayJob, slot); });
+            }
+        } catch (e) { /* ignore */ }
+    });
+}
+
+// Job action functions
+async function startJob(jobId) {
+    try {
+        const response = await fetch(`/bookings/${jobId}/start`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        });
+        
+        if (response.ok) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Job Started', 'You can now work on this job.', 'success');
+            } else {
+                alert('Job started! You can now work on it.');
+            }
+            loadMyJobs(); // Refresh the list
+        } else {
+            throw new Error('Failed to start job');
+        }
+    } catch (error) {
+        console.error('Error starting job:', error);
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert('Failed to Start', 'Please try again.', 'warning');
+        } else {
+            alert('Failed to start job. Please try again.');
+        }
+    }
+}
+
+async function completeJob(jobId) {
+    const ok = await confirmAction('Are you sure you want to mark this job as completed?', 'Yes, Complete', 'Cancel');
+    if (!ok) return;
+    
+    try {
+        const response = await fetch(`/bookings/${jobId}/complete`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        });
+        
+        if (response.ok) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Job Completed!', 'Great work! Your payment will be processed soon.', 'success');
+            }
+            loadMyJobs(); // Refresh the list
+            loadEarningsData(); // Refresh earnings
+            loadWeeklyStats(); // Refresh weekly stats
+        } else {
+            throw new Error('Failed to complete job');
+        }
+    } catch (error) {
+        console.error('Error completing job:', error);
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert('Failed to Complete', 'Please try again.', 'warning');
+        } else {
+            alert('Failed to complete job. Please try again.');
+        }
+    }
+}
+
+function viewJobDetails(jobId) {
+    try {
+        const modal = document.getElementById('jobDetailsModal');
+        const body = document.getElementById('jobDetailsBody');
+        const closeBtn = document.getElementById('jobDetailsClose');
+        if (!modal || !body) {
+            alert('Unable to open details at the moment.');
+            return;
+        }
+        body.innerHTML = '<div class="muted">Loading...</div>';
+
+        // Try to load full booking details
+        fetch(`/bookings/${jobId}`, {
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        })
+        .then(function(res){ return res.ok ? res.json() : null; })
+        .then(function(data){
+            let job = data;
+            if (!job && Array.isArray(window.__latestBookings)) {
+                job = window.__latestBookings.find(function(b){ return String(b.id) === String(jobId); }) || null;
+            }
+            job = job || {};
+            const serviceName = (job.service && job.service.title) || job.customServiceTitle || 'Job';
+            const location = job.location || 'Location not specified';
+            const amount = job.agreedPrice_cents ? `₹${(job.agreedPrice_cents/100).toFixed(2)}` : (job.offeredPrice_cents ? `₹${(job.offeredPrice_cents/100).toFixed(2)}` : 'Price TBD');
+            const scheduled = job.scheduled_at ? new Date(job.scheduled_at).toLocaleString() : ((job.created_at || job.createdAt) ? new Date(job.created_at || job.createdAt).toLocaleString() : 'Not scheduled');
+            const status = (job.status || 'unknown').replace(/_/g,' ');
+            const notes = job.notes || job.description || '';
+            const member = (job.member && (job.member.name || job.member.username || job.member.email)) || job.memberName || '';
+            const priceParts = [];
+            if (job.offeredPrice_cents) priceParts.push('Offered: ₹' + (job.offeredPrice_cents/100).toFixed(2));
+            if (job.acceptedPrice_cents) priceParts.push('Accepted: ₹' + (job.acceptedPrice_cents/100).toFixed(2));
+            if (job.agreedPrice_cents) priceParts.push('Agreed: ₹' + (job.agreedPrice_cents/100).toFixed(2));
+
+            body.innerHTML = `
+                <div class="row" style="margin-bottom:8px;">
+                    <strong>${serviceName}</strong>
+                    <span class="pill">${status}</span>
+                </div>
+                <div class="muted" style="margin-bottom:8px;"><i class='fas fa-map-marker-alt'></i> ${location}</div>
+                ${member ? `<div class=\"muted\" style=\"margin-bottom:8px;\"><i class='fas fa-user'></i> ${member}</div>` : ''}
+                <div style=\"margin-bottom:8px;\">
+                    <strong>${amount}</strong>
+                    <span class=\"muted\" style=\"margin-left:8px;\">Scheduled: ${scheduled}</span>
+                </div>
+                ${priceParts.length ? `<div class=\"small-muted\">${priceParts.join(' • ')}</div>` : ''}
+                ${notes ? `<div class=\"request-modal-notes\">${notes}</div>` : ''}
+            `;
+        })
+        .catch(function(){ body.innerHTML = '<div class="muted">Unable to load details.</div>'; });
+
+        // Open modal
+        modal.style.display = 'flex';
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden','false');
+
+        // Close handlers
+        if (closeBtn && !closeBtn.hasAttribute('data-handler-attached')) {
+            closeBtn.setAttribute('data-handler-attached','true');
+            closeBtn.addEventListener('click', function(){
+                modal.classList.remove('open');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden','true');
+            });
+        }
+        if (!modal.hasAttribute('data-handler-attached')) {
+            modal.setAttribute('data-handler-attached','true');
+            modal.addEventListener('click', function(e){ if (e.target === modal) { modal.classList.remove('open'); modal.style.display = 'none'; modal.setAttribute('aria-hidden','true'); } });
+        }
+    } catch (e) {
+        console.error('viewJobDetails error', e);
+        alert('Unable to open details.');
+    }
+}
+
+/* initialize */
+updateProgress();
+loadProfile();
+loadUserData();
+loadEarningsData();
+loadMyJobs();
+// Auto-load live requests on page load to show member-requested jobs
+if (typeof loadLiveRequests === 'function') {
+    loadLiveRequests();
+}
+
+/* -------------------- Dynamic Weekly Stats -------------------- */
+async function loadWeeklyStats() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.warn('No token found for weekly stats');
+            return;
+        }
+
+        // Fetch worker's bookings
+        const response = await fetch('/bookings/mine', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch bookings');
+        }
+
+        const bookings = await response.json();
+        
+        // Get start of current week (Monday)
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Adjust if Sunday (0)
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - diff);
+        monday.setHours(0, 0, 0, 0);
+
+        // Filter bookings for this week where worker is assigned
+        const thisWeekBookings = bookings.filter(function(booking) {
+            if (!booking.helperId) return false; // Only count jobs assigned to this worker
+            const bookingDate = new Date(booking.created_at || booking.createdAt || booking.scheduled_at);
+            return bookingDate >= monday;
+        });
+
+        // Calculate stats
+        let totalHours = 0;
+        let completedCount = 0;
+
+        thisWeekBookings.forEach(function(booking) {
+            const status = (booking.status || '').toLowerCase();
+            
+            // Count completed jobs
+            if (status === 'completed') {
+                completedCount++;
+            }
+            
+            // Estimate hours for accepted/in-progress/completed bookings
+            if (status === 'accepted' || status === 'in_progress' || status === 'completed') {
+                // Estimate 2 hours per job (you can adjust this based on actual job duration)
+                totalHours += 2;
+            }
+        });
+
+        // Update display
+        const wkBookedEl = document.getElementById('wkBooked');
+        const wkCompletedEl = document.getElementById('wkCompleted');
+
+        if (wkBookedEl) {
+            wkBookedEl.textContent = totalHours.toFixed(1) + ' hrs';
+        }
+        if (wkCompletedEl) {
+            wkCompletedEl.textContent = completedCount;
+        }
+
+    } catch (error) {
+        console.error('Error loading weekly stats:', error);
+        // Set default values on error
+        const wkBookedEl = document.getElementById('wkBooked');
+        const wkCompletedEl = document.getElementById('wkCompleted');
+        
+        if (wkBookedEl) wkBookedEl.textContent = '0 hrs';
+        if (wkCompletedEl) wkCompletedEl.textContent = '0';
+    }
+}
+
+// Load weekly stats on page load
+loadWeeklyStats();
+
+var isOnline = true;
+var pendingCount = 0;
+var liveRequests = [];
+var currentRequestId = null;
+
+// Custom Alert Function
+function showCustomAlert(title, message, icon) {
+    const overlay = document.getElementById('customAlert');
+    const iconEl = document.getElementById('alertIcon');
+    const titleEl = document.getElementById('alertTitle');
+    const messageEl = document.getElementById('alertMessage');
+    const buttonEl = document.getElementById('alertButton');
+    
+    // Set icon
+    iconEl.className = 'custom-alert-icon';
+    if (icon === 'success') {
+        iconEl.textContent = '✓';
+        iconEl.classList.add('success');
+    } else if (icon === 'warning') {
+        iconEl.textContent = '⚠';
+        iconEl.classList.add('warning');
+    } else if (icon === 'info') {
+        iconEl.textContent = 'ℹ';
+        iconEl.classList.add('info');
+    }
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    overlay.classList.add('show');
+    
+    // Close handler
+    function closeAlert() {
+        overlay.classList.remove('show');
+        document.removeEventListener('keydown', escapeHandler);
+    }
+    
+    // Close on button click
+    buttonEl.onclick = closeAlert;
+    
+    // Close on overlay click
+    overlay.onclick = function(e) {
+        if (e.target === overlay) closeAlert();
+    };
+    
+    // Close on Escape key
+    function escapeHandler(e) {
+        if (e.key === 'Escape') closeAlert();
+    }
+    document.addEventListener('keydown', escapeHandler);
+}
+var acceptedRequestIds = new Set();
+
+try {
+    var storedAccepted = JSON.parse(localStorage.getItem('workerAcceptedRequestIds') || '[]');
+    if (Array.isArray(storedAccepted)) storedAccepted.forEach(function(id){ acceptedRequestIds.add(String(id)); });
+} catch (err) {
+    console.warn('worker: unable to read accepted requests cache', err);
+}
+
+// Add an accepted real-time request to the weekly schedule grid
+function addAcceptedRequestToSchedule(request) {
+    try {
+        if (!request) return;
+        var scheduled = request.scheduled_at || request.scheduledAt || request.serviceDate;
+        var isTbd = !scheduled;
+        var when = isTbd ? new Date() : new Date(scheduled);
+        if (isNaN(when.getTime())) when = new Date();
+
+        // Map JS Sunday-first index to our Mon..Sun grid
+        var jsDay = when.getDay(); // 0..6, 0 = Sun
+        var dayIndex = (jsDay + 6) % 7; // 0=>6, 1=>0, ...
+        var cell = (typeof grid !== 'undefined' && grid && grid.children && grid.children[dayIndex]) ? grid.children[dayIndex] : null;
+        if (!cell) return;
+
+        // Build label (prevent duplicates in the cell)
+        var title = (request.service && request.service.title) || request.customServiceTitle || 'Job';
+        var timeLabel = isTbd ? 'TBD' : when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        var exists = Array.from(cell.querySelectorAll('.slot')).some(function(el){ return el.textContent.includes(title) && el.textContent.includes(timeLabel); });
+        if (exists) return;
+        var slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.textContent = title + ' (' + timeLabel + ')';
+        cell.appendChild(slot);
+        
+        // Optional: clicking the slot opens the simple job modal
+        var job = { title: title, day: cell.dataset.day || '', time: timeLabel, pay: Math.round((request.agreedPrice_cents || request.acceptedPrice_cents || request.offeredPrice_cents || 0) / 100) };
+        if (typeof openJobModal === 'function') {
+            slot.addEventListener('click', function(){ openJobModal(job, slot); });
+        }
+    } catch (e) {
+        console.warn('addAcceptedRequestToSchedule failed', e);
+    }
+}
+
+var fallbackRequests = [
+    {
+        id: 'demo-101',
+        service: { title: 'Elderly Companionship' },
+        location: 'Bandra, Mumbai',
+        offeredPrice_cents: 65000,
+        createdAt: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
+        memberName: 'Mrs. Fernandes',
+        notes: 'Need company for an evening walk and light conversation.',
+        serviceDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        durationHours: 2
+    },
+    {
+        id: 'demo-102',
+        service: { title: 'Elderly Companionship' },
+        location: 'Bandra, Mumbai',
+        offeredPrice_cents: 65000,
+        createdAt: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(),
+        memberName: 'Mr. Kumar',
+        notes: 'Support needed for doctor visit and transport within the neighbourhood.',
+        serviceDate: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+        durationHours: 3
+    },
+    {
+        id: 'demo-103',
+        service: { title: 'Errand Assistance' },
+        location: 'Khar, Mumbai',
+        offeredPrice_cents: 55000,
+        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        memberName: 'Anita',
+        notes: 'Pick up a grocery order and help organise items at home.',
+        serviceDate: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+        durationHours: 1.5
+    }
+];
+
+function persistAcceptedRequestIds() {
+    try {
+        localStorage.setItem('workerAcceptedRequestIds', JSON.stringify(Array.from(acceptedRequestIds)));
+    } catch (err) {
+        console.warn('worker: unable to persist accepted requests', err);
+    }
+}
+
+function updatePendingDisplay(count) {
+    pendingCount = count;
+    var pendingReq = document.getElementById('pendingRequests');
+    if (!pendingReq) return;
+    
+    if (!isOnline) {
+        pendingReq.textContent = 'Go online to start receiving requests.';
+    } else if (count === 0) {
+        pendingReq.textContent = 'No pending requests at the moment. Check back soon!';
+    } else if (count === 1) {
+        pendingReq.textContent = 'You have 1 pending request near you.';
+    } else {
+        pendingReq.textContent = 'You have ' + count + ' pending requests near you.';
+    }
+}
+
+function getRequestById(requestId) {
+    return liveRequests.find(function(r){ return String(r.id) === String(requestId); }) || null;
+}
+
+var requestsListEl = document.getElementById('requestsList');
+if (requestsListEl && !requestsListEl.hasAttribute('data-handler-attached')) {
+    requestsListEl.setAttribute('data-handler-attached', 'true');
+    requestsListEl.addEventListener('click', function(e){
+        var button = e.target.closest('button[data-action]');
+        if (!button) return;
+        var id = button.getAttribute('data-request-id');
+        if (!id) return;
+        e.preventDefault();
+        var action = button.getAttribute('data-action');
+        var request = getRequestById(id);
+        if (!request) {
+            showToast('That request is no longer available.', 'error');
+            return;
+        }
+        if (action === 'accept') openRequestModal(request, 'accept');
+        if (action === 'counter') openRequestModal(request, 'counter');
+        if (action === 'details') openRequestModal(request, 'details');
+    });
+}
+
+var requestModal = document.getElementById('requestModal');
+var requestModalTitle = document.getElementById('requestModalTitle');
+var requestModalBody = document.getElementById('requestModalBody');
+var modalAcceptBtn = document.getElementById('modalAcceptBtn');
+var modalCounterBtn = document.getElementById('modalCounterBtn');
+var requestModalHint = document.getElementById('requestModalHint');
+var closeRequestModalBtn = document.getElementById('closeRequestModal');
+
+function openRequestModal(request, mode) {
+    if (!requestModal) return;
+    currentRequestId = String(request.id);
+    requestModal.classList.add('open');
+    requestModal.style.display = 'flex';
+    requestModal.setAttribute('aria-hidden', 'false');
+    if (document && document.body) {
+        document.body.classList.add('modal-open');
+        var scrollbarComp = window.innerWidth - document.documentElement.clientWidth;
+        if (scrollbarComp > 0) {
+            document.body.style.paddingRight = scrollbarComp + 'px';
+        }
+    }
+
+    var serviceName = request.service && request.service.title ? request.service.title : (request.customServiceTitle || 'Job Request');
+    var location = request.location || request.serviceLocation || 'Location not specified';
+    var offered = request.offeredPrice_cents ? '₹ ' + (request.offeredPrice_cents / 100).toFixed(2) : 'Price negotiable';
+    var member = request.memberName || (request.member && request.member.name) || 'Member';
+    var scheduled = request.serviceDate || request.scheduled_at || request.scheduledAt;
+    var scheduledLabel = scheduled ? new Date(scheduled).toLocaleString() : 'Schedule TBD';
+    var duration = request.durationHours || request.duration || '';
+    var durationLabel = duration ? (typeof duration === 'number' ? duration + ' hrs' : duration) : '';
+    var notes = request.notes || request.description || 'No additional notes provided.';
+    var createdLabel = request.createdAt ? getTimeAgo(new Date(request.createdAt)) : 'Just now';
+
+    var defaultCounter = request.offeredPrice_cents ? Math.round(request.offeredPrice_cents / 100) : '';
+
+    if (requestModalTitle) requestModalTitle.textContent = serviceName;
+    if (requestModalBody) {
+        requestModalBody.innerHTML = [
+            '<section class="request-modal-summary">',
+                '<div class="row">',
+                    '<div class="summary-block">',
+                        '<span class="summary-label">Member</span>',
+                        '<span class="summary-value">' + member + '</span>',
+                    '</div>',
+                    '<div class="summary-block">',
+                        '<span class="summary-label">Location</span>',
+                        '<span class="summary-value">' + location + '</span>',
+                    '</div>',
+                '</div>',
+                '<div class="row">',
+                    '<div class="summary-block">',
+                        '<span class="summary-label">Offered Amount</span>',
+                        '<span class="summary-value">' + offered + '</span>',
+                    '</div>',
+                    '<div class="summary-block">',
+                        '<span class="summary-label">Requested For</span>',
+                        '<span class="summary-value">' + scheduledLabel + '</span>',
+                    '</div>',
+                '</div>',
+                (durationLabel ? '<div class="summary-block"><span class="summary-label">Duration</span><span class="summary-value">' + durationLabel + '</span></div>' : ''),
+            '</section>',
+            '<div class="request-modal-notes">' + notes + '</div>',
+            '<form class="counter-form" id="counterOfferForm">',
+                '<label for="counterOfferInput">Propose your counter offer (₹)</label>',
+                '<div class="counter-input-wrap">',
+                    '<span>₹</span>',
+                    '<input type="number" id="counterOfferInput" min="100" step="50" value="' + defaultCounter + '" inputmode="numeric" />',
+                '</div>',
+                '<p class="counter-help">We will notify the member and update you as soon as they respond.</p>',
+            '</form>'
+        ].join('');
+    }
+
+    if (modalAcceptBtn) {
+        modalAcceptBtn.setAttribute('data-request-id', String(request.id));
+        modalAcceptBtn.setAttribute('data-action', 'accept');
+        modalAcceptBtn.dataset.acceptLabel = 'Accept Request';
+        modalAcceptBtn.dataset.counterLabel = 'Send Counter Offer';
+        modalAcceptBtn.textContent = modalAcceptBtn.dataset.acceptLabel;
+    }
+    if (modalCounterBtn) {
+        modalCounterBtn.setAttribute('data-request-id', String(request.id));
+        modalCounterBtn.textContent = 'Counter Offer';
+    }
+    if (requestModalHint) {
+        requestModalHint.textContent = 'Review the request details, then accept or counter with your rate.';
+    }
+
+    toggleCounterForm(!!(mode && mode.toLowerCase() === 'counter'));
+    if (mode === 'accept' && modalAcceptBtn) modalAcceptBtn.focus();
+}
+
+function closeRequestModal() {
+    if (!requestModal) return;
+    requestModal.classList.remove('open');
+    requestModal.style.display = 'none';
+    requestModal.setAttribute('aria-hidden', 'true');
+    if (document && document.body) {
+        document.body.classList.remove('modal-open');
+        document.body.style.paddingRight = '';
+    }
+    currentRequestId = null;
+    toggleCounterForm(false);
+    setModalBusy(false);
+}
+
+function toggleCounterForm(show) {
+    var form = document.getElementById('counterOfferForm');
+    var counterInput = document.getElementById('counterOfferInput');
+    if (form) form.classList.toggle('active', !!show);
+    if (requestModal) requestModal.classList.toggle('counter-open', !!show);
+
+    if (modalAcceptBtn) {
+        var acceptLabel = modalAcceptBtn.dataset.acceptLabel || 'Accept Request';
+        var counterLabel = modalAcceptBtn.dataset.counterLabel || 'Send Counter Offer';
+        modalAcceptBtn.setAttribute('data-action', show ? 'counter' : 'accept');
+        modalAcceptBtn.textContent = show ? counterLabel : acceptLabel;
+    }
+
+    if (modalCounterBtn) {
+        modalCounterBtn.textContent = show ? 'Cancel' : 'Counter Offer';
+    }
+
+    if (requestModalHint) {
+        requestModalHint.textContent = show
+            ? 'Enter your counter offer amount and send it to the member.'
+            : 'Review the request details, then accept or counter with your rate.';
+    }
+
+    if (show && counterInput) {
+        setTimeout(function(){ counterInput.focus(); counterInput.select(); }, 120);
+    }
+}
+
+function setModalBusy(isBusy, busyLabel) {
+    if (!modalAcceptBtn) return;
+
+    if (isBusy) {
+        modalAcceptBtn.dataset.prevLabel = modalAcceptBtn.textContent;
+        modalAcceptBtn.textContent = busyLabel || 'Working...';
+    } else if (modalAcceptBtn.dataset.prevLabel) {
+        modalAcceptBtn.textContent = modalAcceptBtn.dataset.prevLabel;
+        delete modalAcceptBtn.dataset.prevLabel;
+    }
+
+    modalAcceptBtn.disabled = !!isBusy;
+    if (modalCounterBtn) modalCounterBtn.disabled = !!isBusy;
+    if (requestModal) requestModal.classList.toggle('is-busy', !!isBusy);
+}
+
+var toastHideTimer = null;
+function showToast(message, variant) {
+    var toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.className = 'toast';
+    if (variant) toast.classList.add('toast-' + variant);
+    toast.classList.add('show');
+    clearTimeout(toastHideTimer);
+    toastHideTimer = setTimeout(function(){
+        toast.classList.remove('show');
+    }, 3200);
+}
+
+if (closeRequestModalBtn && !closeRequestModalBtn.hasAttribute('data-handler-attached')) {
+    closeRequestModalBtn.setAttribute('data-handler-attached', 'true');
+    closeRequestModalBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        closeRequestModal();
+    });
+}
+
+if (requestModal && !requestModal.hasAttribute('data-handler-attached')) {
+    requestModal.setAttribute('data-handler-attached', 'true');
+    requestModal.addEventListener('click', function(e){
+        if (e.target === requestModal) closeRequestModal();
+    });
+}
+
+if (modalAcceptBtn && !modalAcceptBtn.hasAttribute('data-handler-attached')) {
+    modalAcceptBtn.setAttribute('data-handler-attached', 'true');
+    modalAcceptBtn.addEventListener('click', function(){
+        var id = currentRequestId || this.getAttribute('data-request-id');
+        if (!id) return;
+        var action = this.getAttribute('data-action') || 'accept';
+        if (action === 'counter') {
+            sendCounterOffer(id);
+        } else {
+            acceptRequest(id);
+        }
+    });
+}
+
+if (modalCounterBtn && !modalCounterBtn.hasAttribute('data-handler-attached')) {
+    modalCounterBtn.setAttribute('data-handler-attached', 'true');
+    modalCounterBtn.addEventListener('click', function(){
+        if (!currentRequestId) return;
+        var form = document.getElementById('counterOfferForm');
+        var shouldShow = !(form && form.classList.contains('active'));
+        toggleCounterForm(shouldShow);
+        if (!shouldShow && modalAcceptBtn) modalAcceptBtn.focus();
+    });
+}
+
+document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && requestModal && requestModal.classList.contains('open')) {
+        closeRequestModal();
+    }
+});
+
+function setRequestsLoading() {
+    var loadingEl = document.getElementById('loadingRequests');
+    var emptyEl = document.getElementById('noRequests');
+    var listEl = document.getElementById('requestsList');
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (listEl) listEl.style.display = 'none';
+}
+
+function showRequestsEmpty(message) {
+    var loadingEl = document.getElementById('loadingRequests');
+    var emptyEl = document.getElementById('noRequests');
+    var listEl = document.getElementById('requestsList');
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (listEl) listEl.style.display = 'none';
+    if (emptyEl) {
+        emptyEl.style.display = 'block';
+        emptyEl.innerHTML = '<i class="fas fa-search"></i><p>' + (message || 'No job requests available at the moment') + '</p>';
+    }
+    updatePendingDisplay(0);
+}
+
+function renderLiveRequests(requests) {
+    var listEl = document.getElementById('requestsList');
+    var loadingEl = document.getElementById('loadingRequests');
+    var emptyEl = document.getElementById('noRequests');
+    if (!listEl || !loadingEl || !emptyEl) return;
+
+    if (!requests || !requests.length) {
+        showRequestsEmpty();
+        return;
+    }
+
+    var html = requests.map(function(request){
+        var serviceName = request.service && request.service.title ? request.service.title : (request.customServiceTitle || 'Custom Service');
+        var location = request.location || request.serviceLocation || 'Location not specified';
+        var offered = request.offeredPrice_cents ? '₹ ' + (request.offeredPrice_cents / 100).toFixed(2) : 'Price negotiable';
+        var timeAgo = request.createdAt ? getTimeAgo(new Date(request.createdAt)) : 'Just now';
+        var notes = request.notes || request.description || '';
+        return [
+            '<article class="request-card" data-request-id="' + request.id + '">',
+                '<div class="request-card-header">',
+                    '<strong>' + serviceName + '</strong>',
+                    '<span class="pill" style="background:#e0f2fe;color:#0277bd;">' + timeAgo + '</span>',
+                '</div>',
+                '<div class="muted"><i class="fas fa-map-marker-alt"></i> ' + location + '</div>',
+                '<div class="request-card-meta">',
+                    '<span><strong>' + offered + '</strong></span>',
+                    '<span class="muted">Request #' + request.id + '</span>',
+                '</div>',
+                (notes ? '<div class="notes">' + notes + '</div>' : ''),
+                '<div class="btn-row">',
+                    '<button class="btn-sm primary" data-action="accept" data-request-id="' + request.id + '"><i class="fas fa-check"></i> Accept</button>',
+                    '<button class="btn-sm" data-action="counter" data-request-id="' + request.id + '"><i class="fas fa-handshake"></i> Counter Offer</button>',
+                    '<button class="btn-sm" data-action="details" data-request-id="' + request.id + '"><i class="fas fa-eye"></i> Details</button>',
+                '</div>',
+            '</article>'
+        ].join('');
+    }).join('');
+
+    listEl.innerHTML = html;
+    loadingEl.style.display = 'none';
+    emptyEl.style.display = 'none';
+    listEl.style.display = 'block';
+    updatePendingDisplay(requests.length);
+}
+
+function transformRequests(rawRequests, sourceLabel) {
+    if (!Array.isArray(rawRequests)) return [];
+    return rawRequests.map(function(request){
+        return Object.assign({}, request, { __source: sourceLabel || 'api' });
+    });
+}
+
+var goOnlineBtn = document.getElementById('goOnlineBtn');
+if (goOnlineBtn && !goOnlineBtn.hasAttribute('data-handler-attached')) {
+    goOnlineBtn.setAttribute('data-handler-attached', 'true');
+    goOnlineBtn.addEventListener('click', function(){
+        isOnline = true;
+        const statusPill = document.getElementById('statusPill');
+        const pendingReq = document.getElementById('pendingRequests');
+        
+        statusPill.textContent = 'Status: Online';
+        statusPill.style.background = '#10b981';
+        statusPill.style.color = '#fff';
+        
+        goOnlineBtn.style.opacity = '0.6';
+        goOnlineBtn.style.cursor = 'not-allowed';
+        goOnlineBtn.disabled = true;
+        
+        document.getElementById('setAwayBtn').style.opacity = '1';
+        document.getElementById('setAwayBtn').style.cursor = 'pointer';
+        document.getElementById('setAwayBtn').disabled = false;
+        
+        pendingReq.textContent = 'Loading requests...';
+        loadLiveRequests();
+        showCustomAlert('You\'re Online!', 'You will now receive job requests from members in your area.', 'success');
+    });
+}
+
+var setAwayBtn = document.getElementById('setAwayBtn');
+if (setAwayBtn && !setAwayBtn.hasAttribute('data-handler-attached')) {
+    setAwayBtn.setAttribute('data-handler-attached', 'true');
+    setAwayBtn.addEventListener('click', function(){
+        isOnline = false;
+        const statusPill = document.getElementById('statusPill');
+        const pendingReq = document.getElementById('pendingRequests');
+        
+        statusPill.textContent = 'Status: Away';
+        statusPill.style.background = '#f59e0b';
+        statusPill.style.color = '#fff';
+        
+        setAwayBtn.style.opacity = '0.6';
+        setAwayBtn.style.cursor = 'not-allowed';
+        setAwayBtn.disabled = true;
+        
+        document.getElementById('goOnlineBtn').style.opacity = '1';
+        document.getElementById('goOnlineBtn').style.cursor = 'pointer';
+        document.getElementById('goOnlineBtn').disabled = false;
+        
+        pendingReq.textContent = 'Go online to start receiving requests.';
+        showRequestsEmpty('Switch to Online to start receiving job requests.');
+        showCustomAlert('You\'re Away', 'You will not receive new job requests until you go online again.', 'warning');
+    });
+}
+
+var refreshRequestsBtn = document.getElementById('refreshRequests');
+if (refreshRequestsBtn && !refreshRequestsBtn.hasAttribute('data-handler-attached')) {
+    refreshRequestsBtn.setAttribute('data-handler-attached', 'true');
+    refreshRequestsBtn.addEventListener('click', function(){
+        if (!isOnline) {
+            showRequestsEmpty('Switch to Online to start receiving job requests.');
+            return;
+        }
+        loadLiveRequests();
+    });
+}
+
+async function loadLiveRequests() {
+    if (!isOnline) {
+        showRequestsEmpty('Switch to Online to start receiving job requests.');
+        return;
+    }
+
+    setRequestsLoading();
+
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showRequestsEmpty('Please log in again to view job requests.');
+            window.location.href = 'login.html';
+            return;
+        }
+        const response = await fetch('/bookings/available', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load requests');
+        
+        const requests = await response.json();
+        // Only show active, unassigned requests that are not completed/cancelled
+        const filtered = Array.isArray(requests) ? requests.filter(function(r){
+            var status = (r.status || '').toLowerCase();
+            if (status === 'completed' || status === 'cancelled') return false;
+            if (r.helperId) return false;
+            return true;
+        }) : [];
+        liveRequests = transformRequests(filtered, 'api');
+        if (!liveRequests.length) {
+            showRequestsEmpty();
+            return;
+        }
+        renderLiveRequests(liveRequests);
+    } catch (error) {
+        console.warn('Error loading requests:', error);
+        // If unauthorized/forbidden, force re-login
+        try {
+            if (error && error.message) {
+                // no-op, just to keep linter quiet on unused var
+            }
+        } catch (e) {}
+        showRequestsEmpty('Unable to load job requests right now.');
+    }
+}
+
+function getTimeAgo(date) {
+    var now = new Date();
+    var diff = now - date;
+    var minutes = Math.floor(diff / 60000);
+    var hours = Math.floor(diff / 3600000);
+    var days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return minutes + 'm ago';
+    if (hours < 24) return hours + 'h ago';
+    return days + 'd ago';
+}
+
+async function acceptRequest(requestId) {
+    var request = getRequestById(requestId);
+    if (!request) {
+        showToast('Unable to find this request. It may have expired.', 'error');
+        return;
+    }
+
+    function handleAcceptSuccess(message, variant) {
+        acceptedRequestIds.add(String(request.id));
+        persistAcceptedRequestIds();
+        liveRequests = liveRequests.filter(function(r){ return String(r.id) !== String(request.id); });
+        renderLiveRequests(liveRequests);
+        updatePendingDisplay(liveRequests.length);
+        setModalBusy(false);
+        closeRequestModal();
+        showToast(message, variant || 'success');
+        // Reflect immediately in schedule UI
+        if (typeof addAcceptedRequestToSchedule === 'function') addAcceptedRequestToSchedule(request);
+        if (typeof activate === 'function') activate('schedule');
+        if (typeof loadMyJobs === 'function') loadMyJobs();
+        if (typeof loadWeeklyStats === 'function') loadWeeklyStats();
+    }
+
+    setModalBusy(true, 'Accepting...');
+
+    if (request.__source === 'api') {
+        try {
+            const response = await fetch('/bookings/' + request.id + '/accept', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errBody = await response.json().catch(function(){ return {}; });
+                const code = (errBody && (errBody.error || errBody.code || '')).toString().toLowerCase();
+                if (code.includes('already')) {
+                    // Treat as accepted elsewhere or previously processed; update UI locally
+                    handleAcceptSuccess('Request already processed. Updating your schedule.', 'info');
+                    return;
+                }
+                throw new Error(errBody.error || 'Failed to accept request');
+            }
+
+            handleAcceptSuccess('Request accepted! You can now start the job.', 'success');
+            return;
+        } catch (error) {
+            console.error('Error accepting request:', error);
+            if (error.name === 'TypeError') {
+                handleAcceptSuccess('Offline mode: request saved as accepted locally.', 'info');
+                return;
+            }
+            setModalBusy(false);
+            showToast(error.message || 'Failed to accept request. Please try again.', 'error');
+            return;
+        }
+    }
+
+    handleAcceptSuccess('Request accepted! You can now start the job.', 'success');
+}
+
+function counterOffer(requestId) {
+    var request = getRequestById(requestId);
+    if (!request) {
+        showToast('Unable to find this request. It may have expired.', 'error');
+        return;
+    }
+    openRequestModal(request, 'counter');
+}
+
+async function sendCounterOffer(requestId) {
+    var request = getRequestById(requestId);
+    if (!request) {
+        showToast('Unable to find this request. It may have expired.', 'error');
+        return;
+    }
+
+    var input = document.getElementById('counterOfferInput');
+    if (!input) return;
+    var value = parseFloat(input.value);
+    if (isNaN(value) || value <= 0) {
+        showToast('Enter a valid counter offer amount.', 'error');
+        input.focus();
+        return;
+    }
+
+    var cents = Math.round(value * 100);
+
+    function applyCounterUpdate(message, variant) {
+        request.offeredPrice_cents = cents;
+        request.counterOffer_cents = cents;
+        renderLiveRequests(liveRequests);
+        toggleCounterForm(false);
+        setModalBusy(false);
+        closeRequestModal();
+        showToast(message, variant || 'success');
+    }
+
+    setModalBusy(true, 'Sending...');
+
+    if (request.__source === 'api') {
+        try {
+            const response = await fetch('/bookings/' + request.id + '/counter-offer', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ counterOffer_cents: cents })
+            });
+
+            if (!response.ok) {
+                const errBody = await response.json().catch(function(){ return {}; });
+                throw new Error(errBody.error || 'Failed to send counter offer');
+            }
+
+            applyCounterUpdate('Counter offer sent! Waiting for member response.', 'success');
+            return;
+        } catch (error) {
+            console.error('Error sending counter offer:', error);
+            if (error.name === 'TypeError') {
+                applyCounterUpdate('Offline mode: counter offer saved locally.', 'info');
+                return;
+            }
+            setModalBusy(false);
+            showToast(error.message || 'Failed to send counter offer. Please try again.', 'error');
+            return;
+        }
+    }
+
+    applyCounterUpdate('Counter offer noted. We will notify the member.', 'info');
+}
+
+function viewRequestDetails(requestId) {
+    var request = getRequestById(requestId);
+    if (!request) {
+        showToast('Unable to load request details.', 'error');
+        return;
+    }
+    openRequestModal(request, 'details');
+}
+
+// Auto-refresh every 10 seconds when online (more frequent for better UX)
+setInterval(() => {
+    if (isOnline) {
+        loadLiveRequests();
+    }
+}, 10000);
+
+// Also refresh when page becomes visible (tab switch)
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && isOnline) {
+        loadLiveRequests();
+    }
+});
+
+// Logout functionality
+document.getElementById('logoutWorker').addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    if (await customConfirm('Are you sure you want to logout?')) {
+        try {
+            // Try to revoke refresh token on server if present
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (refreshToken) {
+                try { 
+                    await fetch('/auth/logout', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ refreshToken }) 
+                    }); 
+                } catch (e) { /* ignore */ }
+            }
+            
+            // Clear local storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('accountType');
+            localStorage.removeItem('currentUserId');
+            
+            // Redirect to login
+            window.location.href = 'login.html';
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Still redirect even if logout fails
+            window.location.href = 'login.html';
+        }
+    }
+});
+
+/* ---------- Featured Jobs Carousel (unchanged) ---------- */
+var featuredJobs = [
+    { id:'j1', title:'Evening walk & chat', type:'Companionship', when:'Today 5–6pm', pay:220, img:'images/walk.jpg' },
+    { id:'j2', title:'Groceries & light organizing', type:'Chores', when:'Thu 10–12pm', pay:420, img:'images/groceries.jpg' },
+    { id:'j3', title:'Phone setup & WhatsApp', type:'Tech help', when:'Sat 2–3pm', pay:250, img:'images/tech.jpg' },
+    { id:'j4', title:'Pet walking', type:'Companionship', when:'Sun 10–11am', pay:180, img:'images/pets.jpg' },
+    { id:'j5', title:'Laundry & ironing', type:'Chores', when:'Mon 2–4pm', pay:300, img:'images/laundry.jpg' }
+];
+var carousel = document.getElementById('jobCarousel');
+featuredJobs.forEach(j=>{
+    var card = document.createElement('div');
+    card.className = 'job-card';
+    card.innerHTML = `
+        <img src="${j.img}" alt="${j.title}">
+        <div class="job-info">
+            <strong>${j.title}</strong>
+            <div class="muted">${j.when} • ${j.type}</div>
+            <div><strong>₹ ${j.pay}</strong></div>
+        </div>
+    `;
+    carousel.appendChild(card);
+});
+
+var leftBtn = carousel.parentElement.querySelector('.carousel-btn.left');
+var rightBtn = carousel.parentElement.querySelector('.carousel-btn.right');
+if (leftBtn && !leftBtn.hasAttribute('data-handler-attached')) {
+    leftBtn.setAttribute('data-handler-attached', 'true');
+    leftBtn.addEventListener('click', function(){
+        carousel.scrollBy(-240, 0);
+    });
+}
+if (rightBtn && !rightBtn.hasAttribute('data-handler-attached')) {
+    rightBtn.setAttribute('data-handler-attached', 'true');
+    rightBtn.addEventListener('click', function(){
+        carousel.scrollBy(240, 0);
+    });
+}
+
+</script>
+
+<!-- small auth helper: display logged-in worker name and provide logout -->
+<script>
+  (async function(){
+    try {
+      const getUser = window.getCurrentUser || (async ()=>{
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('unauth');
+        const r = await fetch('/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
+        if(!r.ok) throw new Error('unauth');
+        return r.json();
+      });
+      const user = await getUser();
+      if (!user) return;
+      var header = document.querySelector('.worker-header');
+      if (!header) return;
+      var accountWrap = document.createElement('div');
+      accountWrap.style.display = 'flex';
+      accountWrap.style.alignItems = 'center';
+      accountWrap.style.gap = '12px';
+      accountWrap.style.marginLeft = '12px';
+      var displayName = user.username || user.email || user.phone || '';
+      if (!user.username && user.email) { try { displayName = (user.email || '').split('@')[0]; } catch(e){} }
+      displayName = (displayName || '').toString().trim();
+      if (displayName.indexOf && displayName.indexOf(' ') !== -1) displayName = displayName.split(' ')[0];
+      if (displayName.indexOf && displayName.indexOf('.') !== -1) displayName = displayName.split('.')[0];
+      displayName = displayName.replace(/[^A-Za-z]/g, '');
+      if (displayName.length < 3) displayName = '';
+      // Hide duplicate Profile/Logout in header; keep space for optional badge only
+      accountWrap.innerHTML = '';
+      header.appendChild(accountWrap);
+      var lnk = document.getElementById('logoutWorkerLocal');
+      if (lnk) lnk.addEventListener('click', async function(e){
+        e.preventDefault();
+        // try revoke refresh token on server if present
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          try { await fetch('/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refreshToken }) }); } catch (e) { /* ignore */ }
+        }
+        localStorage.removeItem('token'); localStorage.removeItem('refreshToken'); localStorage.removeItem('userId'); localStorage.removeItem('accountType');
+        window.location.href = 'login.html';
+      });
+
+      // fetch bookings count for the worker
+      try {
+        const bres = await fetch('/bookings/mine', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } });
+        if (bres.ok) {
+          const list = await bres.json();
+          const pending = (list || []).filter(b => b.status === 'pending').length;
+          const badge = document.createElement('div'); badge.style.fontSize='13px'; badge.style.opacity='0.9'; badge.textContent = pending + ' pending';
+          accountWrap.appendChild(badge);
+        }
+      } catch (e) { console.log('worker: bookings fetch failed', e); }
+
+    } catch (e) {
+      console.log('worker auth helper failed', e);
+    }
+  })();
+
+  // Theme toggle functionality
+  (function(){
+    var root = document.documentElement;
+    var toggle = document.getElementById('themeToggle');
+    var saved = localStorage.getItem('theme');
+    if (saved === 'dark') { root.setAttribute('data-theme','dark'); }
+    if (toggle) {
+        toggle.addEventListener('click', function(){
+            if (root.getAttribute('data-theme') === 'dark') {
+                root.removeAttribute('data-theme');
+                localStorage.setItem('theme','light');
+            } else {
+                root.setAttribute('data-theme','dark');
+                localStorage.setItem('theme','dark');
+            }
+        });
+    }
+  })();
+</script>
+
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-left">
+            <h3>JUVO</h3>
+            <p>Connecting workers with opportunities that matter.</p>
+        </div>
+        <div class="footer-center">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#contact">Support</a></li>
+                <li><a href="#">Privacy</a></li>
+                <li><a href="#">Terms</a></li>
+            </ul>
+        </div>
+        <div class="footer-right">
+            <h4>Contact Us</h4>
+            <p><i class="fas fa-envelope"></i> support@juvo.in</p>
+            <p><i class="fas fa-phone"></i> +91 98765 43210</p>
+            <div class="socials">
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        © <span id="footerYear"></span> JUVO. Worker Interface.
+    </div>
+</footer>
+
+<script>
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

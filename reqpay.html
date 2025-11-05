@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JUVO Service Payment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+    body {
+      background-color: #f5f7f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .payment-container {
+      display: flex;
+      background-color: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 900px;
+      max-width: 95%;
+    }
+    .left-panel {
+      background-color: #1b463c;
+      color: white;
+      padding: 40px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .left-panel h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .left-panel p {
+      opacity: 0.9;
+      margin-bottom: 30px;
+    }
+    .price-box {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .right-panel {
+      flex: 2;
+      padding: 40px;
+    }
+    h2 {
+      color: #1b463c;
+      margin-top: 0;
+    }
+    .payment-option {
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .payment-option:hover {
+      border-color: #1b463c;
+      background-color: #f0fdf7;
+    }
+    .payment-option.active {
+      border-color: #1b463c;
+      background-color: #e7f7ef;
+    }
+    .payment-content {
+      display: none;
+      margin-top: 15px;
+    }
+    .payment-content.active {
+      display: block;
+    }
+    .qr-img {
+      width: 200px;
+      height: 200px;
+      display: block;
+      margin: 10px auto;
+      border: 3px solid #ccc;
+      border-radius: 10px;
+      background-color: #fff;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    button {
+      background-color: #1b463c;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #163b32;
+    }
+    .note {
+      font-size: 13px;
+      color: #555;
+      text-align: center;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="payment-container">
+    <div class="left-panel">
+      <h1>JUVO Service Payment</h1>
+      <p>Confirm your order and complete payment securely.</p>
+      <div class="price-box" id="priceBox">₹0</div>
+      <p style="font-size:13px;margin-top:20px;">Once payment is successful, your service request will be processed automatically.</p>
+    </div>
+
+    <div class="right-panel">
+      <h2>Choose Payment Method</h2>
+
+      <div id="upiOption" class="payment-option">UPI (Scan QR)</div>
+      <div id="upiContent" class="payment-content">
+        <img src="images/my-upi-qr.jpg" alt="UPI QR" class="qr-img">
+        <p class="note" id="upiAmount">Amount: ₹0</p>
+      </div>
+
+      <div id="cardOption" class="payment-option">Credit / Debit Card</div>
+      <div id="cardContent" class="payment-content">
+        <input type="text" placeholder="Cardholder Name" required>
+        <input type="text" placeholder="Card Number" maxlength="16" required>
+        <div style="display:flex; gap:10px;">
+          <input type="text" placeholder="MM/YY" maxlength="5" required>
+          <input type="text" placeholder="CVV" maxlength="3" required>
+        </div>
+        <button id="cardPayBtn">Pay Now</button>
+      </div>
+
+      <div id="netbankOption" class="payment-option">Netbanking</div>
+      <div id="netbankContent" class="payment-content">
+        <label>Select your Bank:</label>
+        <select id="bankSelect">
+          <option value="">-- Choose Bank --</option>
+          <option value="SBI">State Bank of India</option>
+          <option value="HDFC">HDFC Bank</option>
+          <option value="ICICI">ICICI Bank</option>
+          <option value="AXIS">Axis Bank</option>
+          <option value="PNB">Punjab National Bank</option>
+        </select>
+        <button id="netbankPayBtn">Pay with Netbanking</button>
+        
+      </div>
+    </div>
+  </div>
+<!-- add this just above </div> of .right-panel -->
+<div style="text-align:center; margin-top:30px;">
+  <button id="confirmPaidBtn" style="
+    background-color:#145c46;
+    padding:14px 28px;
+    border-radius:10px;
+    font-size:16px;
+    color:white;
+    cursor:pointer;
+    border:none;">
+    ✅ I've Paid
+  </button>
+  <p class="note" style="color:#555; font-size:14px;">Click this after completing your payment</p>
+</div>
+
+<script>
+  document.getElementById("confirmPaidBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("confirmPaidBtn");
+    btn.disabled = true;
+    btn.textContent = "Processing...";
+    
+    try {
+      // Get booking ID from localStorage
+      const bookingId = localStorage.getItem('pendingBookingId');
+      const amount = localStorage.getItem('pendingBookingAmount');
+      
+      if (bookingId) {
+        // Record payment in database
+        const token = localStorage.getItem('token');
+        if (token) {
+          const response = await fetch(`/bookings/${bookingId}/confirm-payment`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+              paymentId: 'manual_' + Date.now(),
+              amount_cents: Math.round(parseFloat(amount || offeredAmount) * 100),
+              provider: 'manual'
+            })
+          });
+          
+          if (response.ok) {
+            btn.textContent = "✅ Payment Recorded!";
+            // Clear pending booking data
+            localStorage.removeItem('pendingBookingId');
+            localStorage.removeItem('pendingBookingAmount');
+            localStorage.removeItem('pendingBookingLocation');
+            localStorage.removeItem('pendingBookingTitle');
+          } else {
+            btn.textContent = "⚠️ Payment noted (offline)";
+          }
+        }
+      }
+      
+      setTimeout(() => {
+        window.location.href = "member.html";
+      }, 1500);
+    } catch (error) {
+      console.error('Payment confirmation error:', error);
+      btn.textContent = "✅ Redirecting...";
+      setTimeout(() => {
+        window.location.href = "member.html";
+      }, 1000);
+    }
+  });
+</script>
+
+</div>
+
+  <script>
+    // --- get amount from order page ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const offeredAmount = parseInt(urlParams.get("amount")) || 0;
+    document.getElementById("priceBox").textContent = "₹" + offeredAmount;
+    document.getElementById("upiAmount").textContent = "Amount: ₹" + offeredAmount;
+
+    // --- handle option selection ---
+    const options = {
+      upi: { btn: document.getElementById("upiOption"), content: document.getElementById("upiContent") },
+      card: { btn: document.getElementById("cardOption"), content: document.getElementById("cardContent") },
+      netbank: { btn: document.getElementById("netbankOption"), content: document.getElementById("netbankContent") }
+    };
+
+    for (let key in options) {
+      options[key].btn.addEventListener("click", () => {
+        // deactivate others
+        for (let k in options) {
+          options[k].btn.classList.remove("active");
+          options[k].content.classList.remove("active");
+        }
+        // activate clicked
+        options[key].btn.classList.add("active");
+        options[key].content.classList.add("active");
+      });
+    }
+
+    // --- card payment logic ---
+    document.getElementById("cardPayBtn").addEventListener("click", () => {
+      alert("Processing ₹" + offeredAmount + " payment via card...");
+    });
+
+    // --- netbanking logic ---
+    document.getElementById("netbankPayBtn").addEventListener("click", () => {
+      const bank = document.getElementById("bankSelect").value;
+      if (!bank) {
+        alert("Please select your bank.");
+        return;
+      }
+      alert("Redirecting to " + bank + " for ₹" + offeredAmount + " payment...");
+    });
+  </script>
+</body>
+</html>

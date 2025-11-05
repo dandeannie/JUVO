@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login / Sign up - JUVO</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Modern Auth Container Styling */
+        .auth-wrap {
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 50%, #e0f2f1 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Animated background elements */
+        .auth-wrap::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(42, 110, 77, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -200px;
+            right: -200px;
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        .auth-wrap::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(52, 191, 163, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -150px;
+            left: -150px;
+            animation: float 15s ease-in-out infinite reverse;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+        
+        .double-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+        }
+        
+        .double-inner {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 
+                0 20px 60px rgba(42, 110, 77, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            border: 1px solid rgba(42, 110, 77, 0.1);
+        }
+        
+        .auth-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Modern tabs styling */
+        .auth-tabs {
+            background: linear-gradient(135deg, #e8f5e9, #f1f8f4);
+            padding: 8px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(42, 110, 77, 0.15);
+            box-shadow: 0 2px 8px rgba(42, 110, 77, 0.08);
+        }
+        
+        .auth-tabs a {
+            padding: 12px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-tabs a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(42, 110, 77, 0.1), rgba(52, 191, 163, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .auth-tabs a:hover:not(.active)::before {
+            opacity: 1;
+        }
+        
+        .auth-tabs a.active {
+            background: linear-gradient(135deg, #2a6e4d, #34bfa3);
+            color: #fff;
+            box-shadow: 
+                0 8px 20px rgba(42, 110, 77, 0.3),
+                0 0 0 3px rgba(42, 110, 77, 0.1);
+            transform: scale(1.02);
+        }
+        
+        /* Form container */
+        .auth-form-container {
+            position: relative;
+            min-height: 420px;
+        }
+        
+        .auth-form-panel {
+            display: none;
+            width: 100%;
+            animation: slideInFade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .auth-form-panel.active {
+            display: block;
+        }
+        
+        @keyframes slideInFade {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.98); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+        
+        /* Enhanced input styling */
+        .auth-card input,
+        .auth-card select {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+        
+        .auth-card input:focus,
+        .auth-card select:focus {
+            background: #fff;
+            border-color: #2a6e4d;
+            box-shadow: 0 0 0 4px rgba(42, 110, 77, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .auth-card input:hover:not(:focus),
+        .auth-card select:hover:not(:focus) {
+            border-color: #cbd5e1;
+        }
+        
+        /* Button styling */
+        .auth-card .btn {
+            background: linear-gradient(135deg, #2a6e4d, #34bfa3);
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(42, 110, 77, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-card .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .auth-card .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(42, 110, 77, 0.35);
+        }
+        
+        .auth-card .btn:hover::before {
+            left: 100%;
+        }
+        
+        .auth-card .btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Option buttons */
+        .option-btn {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .option-btn:hover {
+            border-color: #2a6e4d;
+            background: #f0fdf4;
+            transform: translateX(4px);
+        }
+        
+        .option-btn.active {
+            background: linear-gradient(135deg, #f0fdf4, #e8f5e9);
+            border-color: #2a6e4d;
+            box-shadow: 0 4px 12px rgba(42, 110, 77, 0.15);
+        }
+        
+        .option-btn .dot {
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #2a6e4d, #34bfa3);
+            box-shadow: 0 2px 8px rgba(42, 110, 77, 0.3);
+        }
+        
+        /* Modal improvements */
+        .modal {
+            background: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%) !important;
+            color: #1a1a1a !important;
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            border: 1px solid rgba(42, 110, 77, 0.15);
+            padding: 32px;
+            position: relative;
+            animation: modalBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes modalBounceIn {
+            from { 
+                opacity: 0; 
+                transform: scale(0.8) translateY(-40px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: scale(1) translateY(0); 
+            }
+        }
+        
+        .modal-content h2,
+        .modal-content h3 {
+            color: #2a6e4d !important;
+            background: linear-gradient(135deg, #2a6e4d, #34bfa3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .modal-content h3 {
+            font-size: 20px;
+            margin-top: 24px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(42, 110, 77, 0.1);
+        }
+        
+        .modal-content p {
+            color: #374151 !important;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        
+        .modal-content .muted {
+            color: #6b7280 !important;
+            background: linear-gradient(135deg, #f0fdf4, #e8f5e9);
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid #2a6e4d;
+            margin-bottom: 20px;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            font-size: 24px;
+            font-weight: 300;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-close:hover {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #dc2626;
+            transform: rotate(90deg) scale(1.1);
+            border-color: rgba(220, 38, 38, 0.2);
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.2);
+        }
+        
+        /* Terms modal specific */
+        .terms-content {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 12px;
+            margin-top: 20px;
+        }
+        
+        .terms-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .terms-content::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        
+        .terms-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #2a6e4d, #34bfa3);
+            border-radius: 10px;
+        }
+        
+        .terms-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #1f5a3e, #2a9d84);
+        }
+        
+        .terms-content strong {
+            color: #2a6e4d;
+            font-weight: 600;
+        }
+        
+        /* Modal buttons */
+        .modal-content .btn {
+            background: linear-gradient(135deg, #2a6e4d, #34bfa3);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(42, 110, 77, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .modal-content .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .modal-content .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(42, 110, 77, 0.35);
+        }
+        
+        .modal-content .btn:hover::before {
+            left: 100%;
+        }
+        
+        .modal-content .btn.primary {
+            background: linear-gradient(135deg, #2a6e4d, #34bfa3);
+        }
+        
+        /* Forgot password modal specific */
+        .modal-content input[type="email"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+            margin-bottom: 16px;
+        }
+        
+        .modal-content input[type="email"]:focus {
+            background: #fff;
+            border-color: #2a6e4d;
+            box-shadow: 0 0 0 4px rgba(42, 110, 77, 0.1);
+            outline: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .auth-card {
+                padding: 32px 24px;
+            }
+            
+            .auth-tabs a {
+                padding: 10px 24px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-root" aria-label="Primary navigation">
+        <div class="hamburger-btn" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="flyout">
+            <a href="index.html#home">Home</a>
+            <a href="index.html#about">About</a>
+            <button class="theme-toggle" id="themeToggle"><span class="dot"></span>Theme</button>
+        </div>
+    </div>
+
+    <div class="auth-wrap">
+        <div class="double-container">
+            <div class="double-inner">
+                <div class="auth-card">
+                    <!-- Auth Tabs -->
+                    <div style="display:flex; justify-content:center;">
+                        <div class="auth-tabs">
+                            <a href="#" data-tab="login" class="auth-tab-link active">Login</a>
+                            <a href="#" data-tab="signup" class="auth-tab-link">Sign up</a>
+                        </div>
+                    </div>
+
+                    <div class="auth-form-container">
+                        <!-- LOGIN FORM -->
+                        <div class="auth-form-panel active" id="loginPanel">
+                            <form id="loginForm" novalidate>
+                                <div class="option-list" aria-label="Choose a login method">
+                                    <button type="button" class="option-btn active" data-mode="email"><span class="dot"></span> Continue with Email</button>
+                                    <button type="button" class="option-btn" data-mode="phone"><span class="dot"></span> Continue with Phone</button>
+                                </div>
+                                <div class="input-group">
+                                    <input type="email" id="loginEmail" name="email" placeholder="Email" required>
+                                    <span class="error-msg" id="emailError"></span>
+                                </div>
+                                <div class="input-group" style="display:none;">
+                                    <input type="tel" id="loginPhone" name="phone" placeholder="Phone number" inputmode="tel" pattern="[0-9+\-()\s]{6,}">
+                                    <span class="error-msg" id="phoneError"></span>
+                                </div>
+                                <div class="input-group">
+                                    <input type="password" id="loginPassword" name="password" placeholder="Password" required minlength="6">
+                                    <span class="error-msg" id="passwordError"></span>
+                                </div>
+                                <div class="auth-actions">
+                                    <a href="#" id="forgotPasswordLink">Forgot password?</a>
+                                    <button type="submit" class="btn">Login</button>
+                                </div>
+                                <div id="loginMsg" class="auth-msg" aria-live="polite"></div>
+                            </form>
+                        </div>
+
+                        <!-- SIGNUP FORM -->
+                        <div class="auth-form-panel" id="signupPanel">
+                            <form id="signupForm" novalidate>
+                                <input type="text" name="username" placeholder="Username" required>
+                                <input type="email" name="email" placeholder="Email" required>
+                                <input type="tel" name="phone" placeholder="Phone" required>
+                                <input type="text" name="address" placeholder="Full address" required>
+                                <div style="display:flex; gap:10px;">
+                                    <input type="date" name="dob" placeholder="Date of birth" style="flex:1;" required>
+                                    <input type="text" name="city" placeholder="City / Locality" style="flex:2;" required>
+                                </div>
+                                <select name="accountType" required>
+                                    <option value="" disabled selected>Account type</option>
+                                    <option value="member">Member (request help/companions)</option>
+                                    <option value="helper">Helper (earn by helping)</option>
+                                    <option value="chef">Chef (cook at home)</option>
+                                </select>
+                                <div class="input-group">
+                                    <input type="password" id="signupPassword" name="password" placeholder="Password" required minlength="6">
+                                    <span class="error-msg" id="signupPasswordError"></span>
+                                </div>
+                                <div class="input-group">
+                                    <input type="password" id="confirmPassword" name="confirm" placeholder="Confirm password" required minlength="6">
+                                    <span class="error-msg" id="confirmPasswordError"></span>
+                                </div>
+                                <div class="auth-actions">
+                                    <label class="terms-label">
+                                        <input type="checkbox" id="termsCheckbox" required> 
+                                        I accept the <a href="#" id="termsLink" style="color: #2a6e4d; text-decoration: underline;">Terms & Conditions</a>
+                                    </label>
+                                    <button type="submit" class="btn">Sign up</button>
+                                </div>
+                                <div id="signupMsg" class="auth-msg" aria-live="polite"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal" id="forgotPasswordModal" aria-hidden="true">
+        <div class="modal-content" style="max-width: 480px;">
+            <span class="modal-close" id="forgotPasswordClose">&times;</span>
+            <h3>🔐 Reset Your Password</h3>
+            <p class="muted">Enter your email address and we'll send you a secure link to reset your password. Check your inbox within a few minutes.</p>
+            <form id="forgotPasswordForm">
+                <input type="email" id="resetEmail" placeholder="Enter your email address" required>
+                <button type="submit" class="btn primary" style="width: 100%;">Send Reset Link</button>
+                <div id="resetMsg" class="auth-msg" style="margin-top: 16px; text-align: center;"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Terms and Conditions Modal -->
+    <div class="modal" id="termsModal" aria-hidden="true">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="modal-close" id="termsClose">&times;</span>
+            <h2>📜 Terms & Conditions</h2>
+            <div class="terms-content">
+                <h3>1. Acceptance of Terms</h3>
+                <p>By accessing and using JUVO, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                
+                <h3>2. Use License</h3>
+                <p>Permission is granted to temporarily access the services on JUVO for personal, non-commercial transitory viewing only.</p>
+                
+                <h3>3. Service Description</h3>
+                <p>JUVO connects elderly individuals with young workers for various services including companionship, household help, personal chefs, and other support services.</p>
+                
+                <h3>4. User Responsibilities</h3>
+                <p><strong>Members:</strong> Provide accurate information, treat helpers respectfully, and pay agreed-upon fees.</p>
+                <p><strong>Workers:</strong> Complete profile verification, deliver promised services professionally, and maintain communication.</p>
+                
+                <h3>5. Payment Terms</h3>
+                <p>• All payments must be made through the JUVO platform</p>
+                <p>• Service fees are determined by workers and members</p>
+                <p>• JUVO+ subscriptions are non-refundable</p>
+                <p>• Platform commission applies to all completed services</p>
+                
+                <h3>6. Privacy Policy</h3>
+                <p>We collect and protect your personal information in accordance with Indian data protection laws. Your data will never be shared with third parties without consent.</p>
+                
+                <h3>7. Safety & Security</h3>
+                <p>• All workers undergo background verification</p>
+                <p>• Members can review and rate workers</p>
+                <p>• Report any safety concerns immediately</p>
+                
+                <h3>8. Cancellation Policy</h3>
+                <p>Bookings can be cancelled up to 24 hours before scheduled time for full refund. Late cancellations may incur charges.</p>
+                
+                <h3>9. Limitation of Liability</h3>
+                <p>JUVO acts as a platform connecting users and is not responsible for the quality of services or disputes between members and workers.</p>
+                
+                <h3>10. Contact Information</h3>
+                <p>For questions about these Terms, contact us at:</p>
+                <p>Email: support@juvo.in</p>
+                <p>Phone: +91 98765 43210</p>
+                
+                <p style="margin-top: 24px; font-size: 0.9em; color: #888; font-style: italic;">Last updated: November 2025</p>
+            </div>
+            <div style="margin-top: 24px; text-align: center; padding-top: 20px; border-top: 2px solid rgba(42, 110, 77, 0.1);">
+                <button class="btn primary" id="acceptTermsBtn">✓ Accept & Close</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h3>JUVO</h3>
+                <p>Connecting workers with opportunities that matter.</p>
+            </div>
+            <div class="footer-center">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#contact">Support</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+            <div class="footer-right">
+                <h4>Contact Us</h4>
+                <p><i class="fas fa-envelope"></i> support@juvo.in</p>
+                <p><i class="fas fa-phone"></i> +91 98765 43210</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © <span id="year"></span> JUVO. Authentication.
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Tab switching
+        const tabLinks = document.querySelectorAll('.auth-tab-link');
+        const loginPanel = document.getElementById('loginPanel');
+        const signupPanel = document.getElementById('signupPanel');
+
+        function switchTab(tab) {
+            // Update tabs
+            tabLinks.forEach(l => {
+                if (l.getAttribute('data-tab') === tab) {
+                    l.classList.add('active');
+                } else {
+                    l.classList.remove('active');
+                }
+            });
+            
+            // Switch panels
+            if (tab === 'login') {
+                loginPanel.classList.add('active');
+                signupPanel.classList.remove('active');
+            } else {
+                signupPanel.classList.add('active');
+                loginPanel.classList.remove('active');
+            }
+        }
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tab = this.getAttribute('data-tab');
+                switchTab(tab);
+                // Update URL hash without scrolling
+                history.replaceState(null, null, '#' + tab);
+            });
+        });
+
+        // Check URL hash on load
+        window.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'signup') {
+                switchTab('signup');
+            } else {
+                switchTab('login');
+            }
+        });
+
+        // Login form elements
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('loginEmail');
+        const phoneInput = document.getElementById('loginPhone');
+        const passwordInput = document.getElementById('loginPassword');
+        const loginMsg = document.getElementById('loginMsg');
+        
+        let loginMode = 'email';
+
+        // Toggle between email and phone
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const mode = this.getAttribute('data-mode');
+                loginMode = mode;
+                
+                document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                if (mode === 'email') {
+                    emailInput.parentElement.style.display = 'block';
+                    phoneInput.parentElement.style.display = 'none';
+                    emailInput.required = true;
+                    phoneInput.required = false;
+                } else {
+                    emailInput.parentElement.style.display = 'none';
+                    phoneInput.parentElement.style.display = 'block';
+                    emailInput.required = false;
+                    phoneInput.required = true;
+                }
+            });
+        });
+
+        // Validation functions
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+
+        function validatePhone(phone) {
+            const re = /^[0-9+\-()\ ]{6,}$/;
+            return re.test(phone);
+        }
+
+        function showError(input, message) {
+            const errorSpan = input.parentElement.querySelector('.error-msg');
+            if (errorSpan) {
+                errorSpan.textContent = message;
+                errorSpan.style.display = 'block';
+            }
+            input.classList.add('error');
+        }
+
+        function clearError(input) {
+            const errorSpan = input.parentElement.querySelector('.error-msg');
+            if (errorSpan) {
+                errorSpan.textContent = '';
+                errorSpan.style.display = 'none';
+            }
+            input.classList.remove('error');
+        }
+
+        // Real-time validation
+        emailInput.addEventListener('blur', function() {
+            if (loginMode === 'email' && this.value) {
+                if (!validateEmail(this.value)) {
+                    showError(this, 'Please enter a valid email address');
+                } else {
+                    clearError(this);
+                }
+            }
+        });
+
+        phoneInput.addEventListener('blur', function() {
+            if (loginMode === 'phone' && this.value) {
+                if (!validatePhone(this.value)) {
+                    showError(this, 'Please enter a valid phone number');
+                } else {
+                    clearError(this);
+                }
+            }
+        });
+
+        passwordInput.addEventListener('blur', function() {
+            if (this.value && !validatePassword(this.value)) {
+                showError(this, 'Password must be at least 6 characters');
+            } else {
+                clearError(this);
+            }
+        });
+
+        // Clear errors on input
+        emailInput.addEventListener('input', () => clearError(emailInput));
+        phoneInput.addEventListener('input', () => clearError(phoneInput));
+        passwordInput.addEventListener('input', () => clearError(passwordInput));
+
+        // Forgot password
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        const forgotPasswordClose = document.getElementById('forgotPasswordClose');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const resetEmail = document.getElementById('resetEmail');
+        const resetMsg = document.getElementById('resetMsg');
+
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            forgotPasswordModal.classList.add('open');
+            forgotPasswordModal.setAttribute('aria-hidden', 'false');
+        });
+
+        forgotPasswordClose.addEventListener('click', function() {
+            forgotPasswordModal.classList.remove('open');
+            forgotPasswordModal.setAttribute('aria-hidden', 'true');
+            resetMsg.textContent = '';
+            resetEmail.value = '';
+        });
+
+        forgotPasswordModal.addEventListener('click', function(e) {
+            if (e.target === forgotPasswordModal) {
+                forgotPasswordClose.click();
+            }
+        });
+
+        forgotPasswordForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = resetEmail.value.trim();
+            
+            if (!validateEmail(email)) {
+                resetMsg.textContent = 'Please enter a valid email address';
+                resetMsg.style.color = 'red';
+                return;
+            }
+            
+            resetMsg.textContent = 'Sending reset link...';
+            resetMsg.style.color = '#2a6e4d';
+            
+            setTimeout(() => {
+                resetMsg.textContent = '✓ Password reset link sent to your email!';
+                resetMsg.style.color = '#2a6e4d';
+                
+                setTimeout(() => {
+                    forgotPasswordClose.click();
+                }, 2000);
+            }, 1500);
+        });
+
+        // Signup form elements
+        const signupForm = document.getElementById('signupForm');
+        const signupPassword = document.getElementById('signupPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const termsCheckbox = document.getElementById('termsCheckbox');
+        const termsLink = document.getElementById('termsLink');
+        const termsModal = document.getElementById('termsModal');
+        const termsClose = document.getElementById('termsClose');
+        const acceptTermsBtn = document.getElementById('acceptTermsBtn');
+
+        // Password validation
+        signupPassword.addEventListener('blur', function() {
+            if (this.value && this.value.length < 6) {
+                showError(this, 'Password must be at least 6 characters');
+            } else {
+                clearError(this);
+            }
+        });
+
+        confirmPassword.addEventListener('blur', function() {
+            if (this.value && this.value !== signupPassword.value) {
+                showError(this, 'Passwords do not match');
+            } else {
+                clearError(this);
+            }
+        });
+
+        signupPassword.addEventListener('input', () => clearError(signupPassword));
+        confirmPassword.addEventListener('input', () => {
+            clearError(confirmPassword);
+            if (confirmPassword.value && confirmPassword.value === signupPassword.value) {
+                clearError(confirmPassword);
+            }
+        });
+
+        // Terms modal
+        termsLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            termsModal.classList.add('open');
+            termsModal.setAttribute('aria-hidden', 'false');
+        });
+
+        termsClose.addEventListener('click', function() {
+            termsModal.classList.remove('open');
+            termsModal.setAttribute('aria-hidden', 'true');
+        });
+
+        acceptTermsBtn.addEventListener('click', function() {
+            termsCheckbox.checked = true;
+            termsClose.click();
+        });
+
+        termsModal.addEventListener('click', function(e) {
+            if (e.target === termsModal) {
+                termsClose.click();
+            }
+        });
+
+        // Form validation on submit
+        signupForm.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            if (signupPassword.value.length < 6) {
+                showError(signupPassword, 'Password must be at least 6 characters');
+                isValid = false;
+            }
+
+            if (confirmPassword.value !== signupPassword.value) {
+                showError(confirmPassword, 'Passwords do not match');
+                isValid = false;
+            }
+
+            if (!termsCheckbox.checked) {
+                alert('Please accept the Terms & Conditions');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+
+        // Set year
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
