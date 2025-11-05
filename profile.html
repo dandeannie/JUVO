@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <title>JUVO – Profile</title>
+    <link rel="stylesheet" href="styles.css">
+
+ </head>
+ <body class="profile-page">
+    <header class="p-header">
+        <div class="container p-head-inner">
+            <div class="p-brand">
+                <img src="juvo-logo.jpg" alt="JUVO">
+                <span>JUVO</span>
+            </div>
+            <div class="p-actions">
+                <a href="member.html">Home</a>
+                <button class="theme-toggle" id="themeToggle">
+                    <span class="dot"></span>
+                    <span id="themeLabel">Light</span>
+                </button>
+                <a href="#" id="logoutTop">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="p-container">
+        <aside class="card" style="position: sticky; inset-block-start: 100px; align-self: start; block-size: fit-content;">
+            <div class="avatar-wrap">
+                <!-- default placeholder avoids broken image before JS runs -->
+                <img id="avatarImg" class="avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><rect rx='70' width='140' height='140' fill='%23e9f5ef'/><text x='50%' y='55%' font-size='64' dominant-baseline='middle' text-anchor='middle' fill='%232a6e4d' font-family='Arial' font-weight='700'>J</text></svg>" alt="Avatar">
+                <button id="avatarRemove" style="display: none;">Remove</button>
+                <button id="avatarAdd">Add</button>
+                <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+            </div>
+            <div class="user-name" id="userName">Guest</div>
+            <div class="user-detail" id="userEmail">Loading...</div>
+            <div class="user-detail" id="userPhone">-</div>
+            <div class="p-account-type-wrap">
+                <span class="pill" id="accountType">Member</span>
+            </div>
+            <div class="muted" style="text-align: center;">
+                Member since <span id="memberSince">—</span>
+            </div>
+        </aside>
+
+        <main class="card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-block-end: 24px;">
+                <h2 >Profile Details</h2>
+                <button class="btn primary" id="editBtn" style="display: none;">Edit Profile</button>
+            </div>
+
+            <div id="profileCallout" class="muted" style="display: none;">
+                Add your contact information and saved addresses so helpers know where to meet you.
+            </div>
+
+            <div id="viewMode">
+                <div class="kvs">
+                    <div class="k">Username</div>
+                    <div class="v" id="vUsername">—</div>
+                    <div class="k">Email</div>
+                    <div class="v" id="vEmail">—</div>
+                    <div class="k">Phone</div>
+                    <div class="v" id="vPhone">—</div>
+                    <div class="k">Primary Address</div>
+                    <div class="v" id="vAddress">—</div>
+                    <div class="k">Home Address</div>
+                    <div class="v" id="vHomeAddress">—</div>
+                    <div class="k">Work Address</div>
+                    <div class="v" id="vWorkAddress">—</div>
+                    <div class="k">Location</div>
+                    <div class="v" id="vLocation">—</div>
+                    <div class="k">Account Type</div>
+                    <div class="v" id="vAccountType">—</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalBookings">0</div>
+                        <div class="stat-label">Total Bookings</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="completedBookings">0</div>
+                        <div class="stat-label">Completed</div>
+            </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="pendingBookings">0</div>
+                        <div class="stat-label">Pending</div>
+                </div>
+                </div>
+            </div>
+
+            <form id="editMode" class="edit-grid" style="display: none;">
+                <div class="full">
+                    <label>Username</label>
+                    <input type="text" name="username" id="editUsername" required>
+                </div>
+                <div class="full">
+                    <label>Email</label>
+                    <input type="email" name="email" id="editEmail" required>
+                </div>
+                <div class="full">
+                    <label>Phone</label>
+                    <input type="tel" name="phone" id="editPhone">
+                </div>
+                <div class="full">
+                    <label>Primary Address</label>
+                    <textarea name="address" id="editAddress" rows="3"></textarea>
+                </div>
+                <div class="full">
+                    <label>Home Address</label>
+                    <textarea name="homeAddress" id="editHomeAddress" rows="3" placeholder="Add a home address for quick bookings"></textarea>
+                </div>
+                <div class="full">
+                    <label>Work Address</label>
+                    <textarea name="workAddress" id="editWorkAddress" rows="3" placeholder="Add a work address if services are needed there"></textarea>
+                </div>
+                <div class="full">
+                    <label>Location</label>
+                    <input type="text" name="location" id="editLocation">
+                </div>
+                <div class="full actions">
+                    <button type="button" class="btn" id="cancelEdit">Cancel</button>
+                    <button type="submit" class="btn primary">Save Changes</button>
+                </div>
+                <div id="msg" class="muted full" aria-live="polite"></div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        // Theme toggle (standalone - no script.js conflict)
+        (function() {
+            const root = document.documentElement;
+            const themeToggle = document.getElementById('themeToggle');
+            const themeLabel = document.getElementById('themeLabel');
+
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                root.setAttribute('data-theme', 'dark');
+            }
+            
+            function updateThemeUI() {
+                const isDark = root.getAttribute('data-theme') === 'dark';
+                if (themeLabel) {
+                    themeLabel.textContent = isDark ? 'Dark' : 'Light';
+                }
+            }
+
+            // Initialize
+            updateThemeUI();
+
+            // Toggle on click
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const current = root.getAttribute('data-theme');
+                    const newTheme = current === 'dark' ? 'light' : 'dark';
+                    root.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateThemeUI();
+                });
+            }
+        })();
+
+        // Load user data
+        async function loadUserProfile() {
+            try {
+                let user = null;
+
+                // Try direct fetch from /auth/me
+                try {
+                    const token = localStorage.getItem('token');
+                    console.log('Token found:', !!token);
+                    
+                    if (token) {
+                        const response = await fetch('/auth/me', {
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            }
+                        });
+                        
+                        console.log('Response status:', response.status);
+                        
+                        if (response.ok) {
+                            user = await response.json();
+                            console.log('User loaded from server:', user);
+                        } else {
+                            console.warn('Server response not OK:', response.status);
+                        }
+                    } else {
+                        console.warn('No token found - user not logged in');
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch user from server:', err);
+                }
+
+                // If we couldn't fetch from server, try localStorage fallback (signup flow may have saved data)
+                if (!user) {
+                    const stored = {};
+                    try {
+                        stored.id = localStorage.getItem('userId');
+                        stored.username = localStorage.getItem('username');
+                        stored.email = localStorage.getItem('email');
+                        stored.phone = localStorage.getItem('phone');
+                        stored.address = localStorage.getItem('address');
+                        stored.homeAddress = localStorage.getItem('homeAddress');
+                        stored.workAddress = localStorage.getItem('workAddress');
+                        stored.location = localStorage.getItem('location');
+                        stored.accountType = localStorage.getItem('accountType') || 'member';
+                    } catch (e) { /* ignore */ }
+
+                    const hasAny = !!(stored.username || stored.email || stored.phone || stored.address || stored.homeAddress || stored.workAddress || stored.location || stored.accountType || stored.id);
+                    if (hasAny) {
+                        user = stored;
+                        // show a small toast so user knows this is local-only data
+                        showToast('Loaded saved profile from this browser (login to persist to server)', 'info');
+                    }
+                }
+
+                if (!user) {
+                    // No server data and nothing in localStorage — prompt login
+                    // keep placeholders but show Edit enabling so user can add details
+                    console.warn('No user data found - showing placeholder');
+                    document.getElementById('editBtn').style.display = 'block';
+                    return;
+                }
+
+                console.log('Populating profile with user data:', user);
+                
+                const primaryAddress = user.address || '';
+                const homeAddress = user.homeAddress || '';
+                const workAddress = user.workAddress || '';
+
+                // Populate user info
+                const accountTypeLabel = (user.accountType || 'member').replace(/_/g, ' ');
+                const accountTypeText = accountTypeLabel.charAt(0).toUpperCase() + accountTypeLabel.slice(1);
+
+                document.getElementById('userName').textContent = user.username || user.email || 'User';
+                document.getElementById('userEmail').textContent = user.email || 'No email';
+                document.getElementById('userPhone').textContent = user.phone || '-';
+                document.getElementById('accountType').textContent = accountTypeText;
+                document.getElementById('memberSince').textContent = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : (user.id ? 'Recently' : '—');
+
+                // Populate view mode
+                document.getElementById('vUsername').textContent = user.username || '—';
+                document.getElementById('vEmail').textContent = user.email || '—';
+                document.getElementById('vPhone').textContent = user.phone || '—';
+                document.getElementById('vAddress').textContent = primaryAddress || '—';
+                document.getElementById('vHomeAddress').textContent = homeAddress || '—';
+                document.getElementById('vWorkAddress').textContent = workAddress || '—';
+                document.getElementById('vLocation').textContent = user.location || '—';
+                document.getElementById('vAccountType').textContent = accountTypeText || '—';
+
+                // Populate edit mode
+                document.getElementById('editUsername').value = user.username || '';
+                document.getElementById('editEmail').value = user.email || '';
+                document.getElementById('editPhone').value = user.phone || '';
+                document.getElementById('editAddress').value = primaryAddress || '';
+                document.getElementById('editHomeAddress').value = homeAddress || '';
+                document.getElementById('editWorkAddress').value = workAddress || '';
+                document.getElementById('editLocation').value = user.location || '';
+
+                const callout = document.getElementById('profileCallout');
+                if (callout) {
+                    const missingBasics = !(user.phone && primaryAddress);
+                    const missingSavedSpots = !(homeAddress && workAddress);
+                    if (missingBasics || missingSavedSpots) {
+                        const bits = [];
+                        if (missingBasics) bits.push('add your phone number and a primary address');
+                        if (missingSavedSpots) bits.push('save both home and work locations');
+                        callout.innerHTML = 'Let helpers reach you faster—' + bits.join(' and ') + '. Use <strong>Edit Profile</strong> to update these details.';
+                        callout.style.display = 'block';
+                    } else {
+                        callout.style.display = 'none';
+                    }
+                }
+
+                // Show edit button
+                document.getElementById('editBtn').style.display = 'block';
+
+                // Load avatar
+                if (user.avatarUrl) {
+                    document.getElementById('avatarImg').src = user.avatarUrl;
+                } else if (localStorage.getItem('avatarDataUrl')) {
+                    document.getElementById('avatarImg').src = localStorage.getItem('avatarDataUrl');
+                } else {
+                    // Generate default avatar based on username
+                    const username = user.username || user.email || 'User';
+                    const firstLetter = username.charAt(0).toUpperCase();
+                    const avatarImg = document.getElementById('avatarImg');
+                    avatarImg.src = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%232a6e4d'/><text x='50%' y='50%' dominant-baseline='central' text-anchor='middle' font-size='56' fill='white' font-weight='bold'>${firstLetter}</text></svg>`;
+                }
+
+                // Load bookings statistics (only if we have a server token / id)
+                try {
+                    await loadBookingsStats(user);
+                } catch (e) {
+                    // ignore booking errors when offline/local
+                }
+
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+                showToast('Failed to load profile data');
+            }
+        }
+
+        async function loadBookingsStats(user) {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/bookings/mine', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.ok) {
+                    const bookings = await res.json();
+                    const total = bookings.length;
+                    const completed = bookings.filter(b => b.status === 'completed').length;
+                    const pending = bookings.filter(b => ['pending', 'counter_offered', 'accepted'].includes(b.status)).length;
+
+                    document.getElementById('totalBookings').textContent = total;
+                    document.getElementById('completedBookings').textContent = completed;
+                    document.getElementById('pendingBookings').textContent = pending;
+                }
+            } catch (error) {
+                console.log('Failed to load bookings stats:', error);
+            }
+        }
+
+        // Edit functionality
+        const editBtn = document.getElementById('editBtn');
+        const viewMode = document.getElementById('viewMode');
+        const editMode = document.getElementById('editMode');
+        const cancelBtn = document.getElementById('cancelEdit');
+
+        editBtn.addEventListener('click', function() {
+            viewMode.style.display = 'none';
+            editMode.style.display = 'grid';
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            editMode.style.display = 'none';
+            viewMode.style.display = 'block';
+        });
+
+        editMode.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('editUsername').value;
+            const email = document.getElementById('editEmail').value;
+            const phone = document.getElementById('editPhone').value;
+            const address = document.getElementById('editAddress').value;
+            const homeAddress = document.getElementById('editHomeAddress').value;
+            const workAddress = document.getElementById('editWorkAddress').value;
+            const location = document.getElementById('editLocation').value;
+
+            try {
+                const token = localStorage.getItem('token');
+                const msgDiv = document.getElementById('msg');
+
+                if (token) {
+                    // Persist to server when we have an access token
+                    const res = await fetch('/auth/me', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({
+                            username,
+                            email,
+                            phone,
+                            address,
+                            homeAddress,
+                            workAddress,
+                            location
+                        })
+                    });
+
+                    if (res.ok) {
+                        msgDiv.textContent = 'Profile updated successfully!';
+                        msgDiv.style.color = 'green';
+                        // Update any simple local cache we keep
+                        try {
+                            localStorage.setItem('username', username || '');
+                            localStorage.setItem('email', email || '');
+                            localStorage.setItem('phone', phone || '');
+                            localStorage.setItem('address', address || '');
+                            localStorage.setItem('homeAddress', homeAddress || '');
+                            localStorage.setItem('workAddress', workAddress || '');
+                            localStorage.setItem('location', location || '');
+                        } catch (e) {}
+
+                        // Reload to show updated data
+                        setTimeout(() => location.reload(), 900);
+                    } else {
+                        const error = await res.json().catch(()=>({}));
+                        msgDiv.textContent = error.error || 'Failed to update profile';
+                        msgDiv.style.color = 'red';
+                    }
+                } else {
+                    // No token: save to localStorage only and let user know these are local-only changes
+                    try {
+                        localStorage.setItem('username', username || '');
+                        localStorage.setItem('email', email || '');
+                        localStorage.setItem('phone', phone || '');
+                        localStorage.setItem('address', address || '');
+                        localStorage.setItem('homeAddress', homeAddress || '');
+                        localStorage.setItem('workAddress', workAddress || '');
+                        localStorage.setItem('location', location || '');
+                        msgDiv.textContent = 'Saved locally — sign in to persist to your account.';
+                        msgDiv.style.color = '#164e63';
+                        setTimeout(() => { msgDiv.textContent = ''; location.reload(); }, 1000);
+                    } catch (e) {
+                        msgDiv.textContent = 'Unable to save locally.';
+                        msgDiv.style.color = 'red';
+                    }
+                }
+            } catch (error) {
+                document.getElementById('msg').textContent = 'Network error';
+                document.getElementById('msg').style.color = 'red';
+            }
+        });
+
+        // Avatar upload
+        const avatarImg = document.getElementById('avatarImg');
+        const avatarUpload = document.getElementById('avatarUpload');
+        const avatarRemove = document.getElementById('avatarRemove');
+        const avatarAdd = document.getElementById('avatarAdd');
+
+        avatarImg.addEventListener('click', () => avatarUpload.click());
+        avatarAdd.addEventListener('click', (e) => { e.stopPropagation(); avatarUpload.click(); });
+
+        avatarUpload.addEventListener('change', async function() {
+            const file = avatarUpload.files[0];
+            if (!file) return;
+
+            // Preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                avatarImg.src = e.target.result;
+                avatarRemove.style.display = 'block';
+                avatarAdd.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+
+            // Upload (or save locally if offline/no token)
+            try {
+                const formData = new FormData();
+                formData.append('avatar', file);
+                const token = localStorage.getItem('token');
+
+                if (token) {
+                    const res = await fetch('/auth/me/avatar', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        body: formData
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.avatarUrl) {
+                            avatarImg.src = data.avatarUrl;
+                            showToast('Avatar updated successfully');
+                        }
+                    }
+                } else {
+                    // Save a small preview locally so profile can show without server
+                    const reader2 = new FileReader();
+                    reader2.onload = (ev) => {
+                        try { localStorage.setItem('avatarDataUrl', ev.target.result); } catch (e) { /* ignore */ }
+                        avatarImg.src = ev.target.result;
+                        showToast('Avatar saved locally — sign in to persist');
+                    };
+                    reader2.readAsDataURL(file);
+                }
+            } catch (error) {
+                console.error('Avatar upload error:', error);
+                showToast('Avatar upload failed');
+            }
+        });
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#dc2626' : '#10b981'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                font-weight: 600;
+                max-width: 300px;
+            `;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+
+        avatarRemove.addEventListener('click', async function() {
+            if (!confirm('Remove avatar?')) return;
+            
+            avatarImg.src = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%232a6e4d'/><text x='50%' y='50%' dominant-baseline='central' text-anchor='middle' font-size='56' fill='white' font-weight='bold'>J</text></svg>`;
+            avatarRemove.style.display = 'none';
+            avatarAdd.style.display = 'block';
+            
+            try {
+                localStorage.removeItem('avatarDataUrl');
+                const token = localStorage.getItem('token');
+                if (token) {
+                    await fetch('/auth/me/avatar', {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutTop').addEventListener('click', async function(e) {
+                e.preventDefault();
+            
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    // Try to revoke refresh token on server if present
+                    const refreshToken = localStorage.getItem('refreshToken');
+                    if (refreshToken) {
+                        try { 
+                            await fetch('/auth/logout', { 
+                                method: 'POST', 
+                                headers: { 'Content-Type': 'application/json' }, 
+                                body: JSON.stringify({ refreshToken }) 
+                            }); 
+                        } catch (e) { /* ignore */ }
+                    }
+                    
+                    // Clear local storage
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('userId');
+                    localStorage.removeItem('accountType');
+                    
+                    // Redirect to login
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    // Still redirect even if logout fails
+                    window.location.href = 'login.html';
+                }
+            }
+        });
+
+        // Load profile on page load
+        loadUserProfile();
+    </script>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h3>JUVO</h3>
+                <p>Connecting workers with opportunities that matter.</p>
+            </div>
+            <div class="footer-center">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#contact">Support</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+            <div class="footer-right">
+                <h4>Contact Us</h4>
+                <p><i class="fas fa-envelope"></i> support@juvo.in</p>
+                <p><i class="fas fa-phone"></i> +91 98765 43210</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © <span id="year"></span> JUVO. Profile Interface.
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+ </body>
+ </html>

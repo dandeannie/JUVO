@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <title>JUVO Payment Gateway</title>
+    <meta name="description" content="Secure payment gateway for JUVO services and JUVO+ membership.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Payment Page Styles */
+        :root {
+            --payment-accent: #2a6e4d;
+            --payment-bg: #f8fafc;
+            --payment-card: #ffffff;
+            --payment-border: rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] {
+            --payment-bg: #0f172a;
+            --payment-card: #1e293b;
+            --payment-border: rgba(255,255,255,0.1);
+        }
+
+        body {
+            background: var(--payment-bg);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .payment-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .payment-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--color-text);
+            margin: 0 0 16px 0;
+        }
+
+        .payment-header p {
+            font-size: 1.1rem;
+            color: var(--color-muted);
+            margin: 0;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .payment-card {
+            background: var(--payment-card);
+            border: 2px solid var(--payment-border);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .payment-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            border-color: var(--payment-accent);
+        }
+
+        .payment-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-text);
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .payment-card .icon {
+            font-size: 2rem;
+        }
+
+        .payment-card .price {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--payment-accent);
+            margin: 16px 0;
+        }
+
+        .payment-card .features {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .payment-card .features li {
+            padding: 8px 0;
+            color: var(--color-text);
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--payment-border);
+        }
+
+        .payment-card .features li:last-child {
+            border-bottom: none;
+        }
+
+        .payment-card .features li::before {
+            content: "✓";
+            color: var(--payment-accent);
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .payment-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--payment-accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 24px;
+        }
+
+        .payment-btn:hover {
+            background: #1d5a3d;
+            transform: translateY(-2px);
+        }
+
+        .payment-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .payment-section {
+            background: var(--payment-card);
+            border: 2px solid var(--payment-border);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .payment-section h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-text);
+            margin: 0 0 24px 0;
+        }
+
+        .payment-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            border: 2px solid var(--payment-border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--color-surface);
+            color: var(--color-text);
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--payment-accent);
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border: 2px solid var(--payment-border);
+            border-radius: 12px;
+            background: var(--color-surface);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .payment-method:hover {
+            border-color: var(--payment-accent);
+            background: rgba(42, 110, 77, 0.05);
+        }
+
+        .payment-method.selected {
+            border-color: var(--payment-accent);
+            background: rgba(42, 110, 77, 0.1);
+        }
+
+        .payment-method input[type="radio"] {
+            display: none;
+        }
+
+        .payment-method .radio-indicator {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--payment-border);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .payment-method.selected .radio-indicator::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background: var(--payment-accent);
+            border-radius: 50%;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--color-muted);
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 40px;
+            background: #f0fdf4;
+            border: 1px solid #10b981;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .success-message h3 {
+            color: #10b981;
+            margin: 0 0 12px 0;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: transparent;
+            border: 2px solid var(--payment-border);
+            border-radius: 8px;
+            color: var(--color-text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: var(--color-surface);
+            border-color: var(--payment-accent);
+        }
+
+        @media (max-width: 768px) {
+            .payment-header h1 {
+                font-size: 2rem;
+            }
+
+            .payment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-card {
+                padding: 24px;
+            }
+
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <a href="member.html" class="back-btn">
+            ← Back to Member Dashboard
+        </a>
+
+        <!-- JUVO+ Membership Plans -->
+        <div class="payment-section">
+            <h2>JUVO+ Premium Membership</h2>
+            <div class="payment-grid">
+                <div class="payment-card" data-plan="monthly">
+                    <h3>
+                        <span class="icon">📅</span>
+                        Monthly Plan
+                    </h3>
+                    <div class="price">₹499</div>
+                    <p style="color: var(--color-muted); margin: 8px 0;">Perfect for trying premium features</p>
+                    <ul class="features">
+                        <li>Priority service requests</li>
+                        <li>Direct helper contact</li>
+                        <li>24/7 support</li>
+                        <li>Cancel anytime</li>
+                    </ul>
+                    <button class="payment-btn" onclick="selectPlan('monthly')">Choose Monthly</button>
+                </div>
+
+                <div class="payment-card" data-plan="yearly">
+                    <h3>
+                        <span class="icon">🎯</span>
+                        Yearly Plan
+                    </h3>
+                    <div class="price">₹4,999</div>
+                    <p style="color: var(--color-muted); margin: 8px 0;">Save ₹989 (16% discount)</p>
+                    <ul class="features">
+                        <li>All monthly features</li>
+                        <li>Free service upgrades</li>
+                        <li>Exclusive member events</li>
+                        <li>Priority scheduling</li>
+                    </ul>
+                    <button class="payment-btn" onclick="selectPlan('yearly')">Choose Yearly</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="payment-section">
+            <h2>Payment Method</h2>
+            <div class="payment-methods">
+                <label class="payment-method selected" for="stripe">
+                    <input type="radio" id="stripe" name="payment_method" value="stripe" checked>
+                    <div class="radio-indicator"></div>
+                    <div>
+                        <div style="font-weight: 600;">Credit/Debit Card</div>
+                        <div style="font-size: 0.85rem; color: var(--color-muted);">Powered by Stripe</div>
+                    </div>
+                </label>
+
+                <label class="payment-method" for="razorpay">
+                    <input type="radio" id="razorpay" name="payment_method" value="razorpay">
+                    <div class="radio-indicator"></div>
+                    <div>
+                        <div style="font-weight: 600;">UPI/Net Banking</div>
+                        <div style="font-size: 0.85rem; color: var(--color-muted);">Powered by Razorpay</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="payment-section">
+            <h2>Complete Your Payment</h2>
+            <div id="paymentForm">
+                <div class="payment-form">
+                    <div class="form-group">
+                        <label for="selectedPlan">Selected Plan</label>
+                        <input type="text" id="selectedPlan" readonly value="None selected" style="background: var(--payment-card); color: var(--color-text);">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Amount</label>
+                        <input type="text" id="amount" readonly value="₹0" style="background: var(--payment-card); color: var(--color-text); font-weight: 600;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="your@email.com" required>
+                    </div>
+
+                    <div id="planError" style="color: #dc2626; font-size: 0.9rem; margin: 12px 0; display: none;">
+                        <i class="fas fa-exclamation-circle"></i> Please select a plan above
+                    </div>
+
+                    <button class="payment-btn" id="payBtn" onclick="processPayment()" disabled>
+                        <i class="fas fa-lock"></i> Proceed to Secure Payment
+                    </button>
+                </div>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                Processing payment...
+            </div>
+
+            <div id="successMessage" class="success-message" style="display: none;">
+                <h3>✅ Payment Successful!</h3>
+                <p>Your payment has been processed successfully. Welcome to JUVO+!</p>
+                <button class="payment-btn" onclick="window.location.href='member.html'">Return to Dashboard</button>
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display: none;">
+                Payment failed. Please try again or contact support.
+            </div>
+        </div>
+    </div>
+
+    <script src="https://checkout.stripe.com/checkout.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        let selectedPlan = null;
+        let selectedMethod = 'stripe';
+
+        function selectPlan(plan) {
+            console.log('Selected plan:', plan);
+            selectedPlan = plan;
+            
+            const planName = plan === 'monthly' ? 'JUVO+ Monthly' : 'JUVO+ Yearly';
+            const planAmount = plan === 'monthly' ? '₹499' : '₹4,999';
+            
+            document.getElementById('selectedPlan').value = planName;
+            document.getElementById('amount').value = planAmount;
+            document.getElementById('payBtn').disabled = false;
+            document.getElementById('planError').style.display = 'none';
+
+            // Highlight selected card with animation
+            document.querySelectorAll('.payment-card').forEach(card => {
+                const isSelected = card.getAttribute('data-plan') === plan;
+                card.style.borderColor = isSelected ? 'var(--payment-accent)' : 'var(--payment-border)';
+                card.style.transform = isSelected ? 'translateY(-8px)' : 'translateY(0)';
+                card.style.boxShadow = isSelected ? '0 16px 32px rgba(42, 110, 77, 0.2)' : '0 4px 6px rgba(0,0,0,0.05)';
+            });
+
+            // Scroll to payment form smoothly
+            setTimeout(() => {
+                document.getElementById('paymentForm').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest'
+                });
+            }, 300);
+
+            // Show success feedback
+            const payBtn = document.getElementById('payBtn');
+            const originalText = payBtn.innerHTML;
+            payBtn.innerHTML = '<i class="fas fa-check"></i> Plan Selected - Continue';
+            payBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            
+            setTimeout(() => {
+                payBtn.innerHTML = originalText;
+                payBtn.style.background = '';
+            }, 2000);
+        }
+
+        async function processPayment() {
+            if (!selectedPlan) {
+                document.getElementById('planError').style.display = 'block';
+                document.getElementById('paymentForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showError('Please select a plan above first');
+                return;
+            }
+
+            const emailInput = document.getElementById('email');
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                emailInput.focus();
+                showError('Please enter your email address');
+                return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                emailInput.focus();
+                showError('Please enter a valid email address');
+                return;
+            }
+
+            const amount = selectedPlan === 'monthly' ? 49900 : 499900; // in cents/paise
+
+            document.getElementById('paymentForm').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            try {
+                if (selectedMethod === 'stripe') {
+                    await processStripePayment(amount, email);
+                } else {
+                    await processRazorpayPayment(amount, email);
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                showError('Payment failed. Please try again or contact support.');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('paymentForm').style.display = 'block';
+            }
+        }
+
+        async function processStripePayment(amount, email) {
+            try {
+                const response = await fetch('/payments/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        plan: selectedPlan,
+                        email: email
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create checkout session');
+                }
+
+                const session = await response.json();
+
+                // Redirect to Stripe Checkout
+                window.location.href = session.url;
+            } catch (error) {
+                console.error('Stripe payment error:', error);
+                throw error;
+            }
+        }
+
+        async function processRazorpayPayment(amount, email) {
+            const options = {
+                key: 'rzp_test_RZNldA3d5o9qao', // Replace with your Razorpay key
+                amount: amount,
+                currency: 'INR',
+                name: 'JUVO+ Membership',
+                description: selectedPlan === 'monthly' ? 'JUVO+ Monthly Plan' : 'JUVO+ Yearly Plan',
+                image: 'juvo-logo.jpg',
+                handler: async function (response) {
+                    // Record payment on backend
+                    try {
+                        await fetch('/payments/record', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+                            },
+                            body: JSON.stringify({
+                                bookingId: null, // For membership payments
+                                amount_cents: amount,
+                                provider: 'razorpay',
+                                metadata: {
+                                    plan: selectedPlan,
+                                    email: email,
+                                    razorpay_payment_id: response.razorpay_payment_id
+                                }
+                            })
+                        });
+
+                        showSuccess();
+                    } catch (recordError) {
+                        console.error('Payment record error:', recordError);
+                        showSuccess(); // Still show success since payment went through
+                    }
+                },
+                prefill: {
+                    email: email
+                },
+                theme: {
+                    color: '#2a6e4d'
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+        function showSuccess() {
+            document.getElementById('paymentForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+
+        // Check for payment success on page load (from Stripe redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('plus') === 'success') {
+            showSuccess();
+            // Clear URL parameters
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeToggle = document.createElement('button');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            themeToggle.style.cssText = 'position:fixed;top:20px;right:20px;z-index:1000;background:var(--payment-accent);color:white;border:none;border-radius:50%;width:50px;height:50px;cursor:pointer;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:transform 0.2s;';
+            document.body.appendChild(themeToggle);
+
+            themeToggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const newTheme = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+
+            themeToggle.addEventListener('mouseenter', () => {
+                themeToggle.style.transform = 'scale(1.1)';
+            });
+
+            themeToggle.addEventListener('mouseleave', () => {
+                themeToggle.style.transform = 'scale(1)';
+            });
+
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            themeToggle.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+
+            // Payment method selection
+            document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    selectedMethod = this.value;
+                    document.querySelectorAll('.payment-method').forEach(method => {
+                        method.classList.remove('selected');
+                    });
+                    this.closest('.payment-method').classList.add('selected');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

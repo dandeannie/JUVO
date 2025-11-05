@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JUVO - Be the Care You Trust</title>
+    <meta name="description" content="JUVO offers Elderly Companionship, Pet Caretaking, Personal Chefs, Bodyguards, Friendly Companions, and Personal Errand & Transportation services for safe, reliable support.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="nav-root" aria-label="Primary navigation">
+        <div class="hamburger-btn" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="flyout">
+            <a href="#home">Home</a>
+            <a href="index.html#about">About</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#contact">Contact</a>
+            <a href="auth.html">Sign up / Log in</a>
+            <button class="theme-toggle" id="themeToggle"><span class="dot"></span>Theme</button>
+        </div>
+    </div>
+
+    <!-- Top-right auth buttons -->
+    <div class="auth-buttons" style="position: fixed; top: 14px; right: 16px; z-index: 1000; display: flex; gap: 8px;">
+        <a href="auth.html" class="btn">Sign up</a>
+        <a href="auth.html" class="btn secondary">Log in</a>
+    </div>
+
+    <div class="intro-section" id="home">
+        <div class="scene">
+            <div class="floating-shape s1" aria-hidden="true"></div>
+            <div class="floating-shape s2" aria-hidden="true"></div>
+            <div class="hero-row hero-3d" role="banner">
+                <div class="intro-logo-circle parallax-layer" data-depth="0.28">
+                    <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fff,#f3f7ff);">
+                        <img src="juvo-logo.jpg" alt="Juvo Logo" class="logo-img">
+                    </div>
+                </div>
+                <div class="title-group parallax-layer" data-depth="0.14">
+                    <div class="intro-title">JUVO</div>
+                    <div class="intro-subtitle">Be the care you trust — local helpers, trusted companions.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="slogan-section" id="slogan">
+        <div class="slogan-words scene">
+            <span class="reveal slogan-word" data-depth="0.42">BE</span>
+            <span class="reveal slogan-word" data-depth="0.28">THE</span>
+            <span class="reveal slogan-word" data-depth="0.18">CARE</span>
+            <span class="reveal slogan-word" data-depth="0.28">YOU</span>
+            <span class="reveal slogan-word" data-depth="0.42">TRUST</span>
+        </div>
+    </section>
+
+    <section class="section about-section" id="about">
+        <div class="particles-holder"><canvas id="aboutParticles"></canvas></div>
+        <div class="about-inner">
+            <div class="about-hero">
+                <div class="about-copy">
+                    <p class="about-eyebrow">Care that feels personal</p>
+                    <h2>About JUVO</h2>
+                    <p>
+                        JUVO connects elders and busy families with nearby, background-checked helpers who show up with heart.
+                        From strolls in the park to setting up a phone or prepping a home-cooked meal, we blend human warmth with
+                        intuitive technology so support is always just a tap away.
+                    </p>
+                    <ul class="about-pills" role="list">
+                        <li>Response in under 4 hours</li>
+                        <li>Verified, community-rated profiles</li>
+                        <li>Flexible one-time or recurring visits</li>
+                    </ul>
+                    <div class="about-highlights" role="group" aria-label="How JUVO helps">
+                        <article class="about-highlight">
+                            <span aria-hidden="true">🤝</span>
+                            <h3>Neighbors supporting neighbors</h3>
+                            <p>We recruit from the same neighborhoods we serve, creating trust that feels like family.</p>
+                        </article>
+                        <article class="about-highlight">
+                            <span aria-hidden="true">🛡️</span>
+                            <h3>Safety built in</h3>
+                            <p>Every helper passes ID, background, and reference checks before their first booking.</p>
+                        </article>
+                        <article class="about-highlight">
+                            <span aria-hidden="true">📅</span>
+                            <h3>Plans that adapt</h3>
+                            <p>Mix single visits with monthly bundles and pause or switch services whenever life changes.</p>
+                        </article>
+                    </div>
+                </div>
+                <div class="about-media" aria-label="Community snapshots">
+                    <figure class="about-media-card primary">
+                        <img src="images/walk.jpg" alt="Helper delivering groceries to a senior" loading="lazy">
+                        <figcaption>Reliable help for daily errands across Mumbai neighborhoods.</figcaption>
+                    </figure>
+                    <div class="about-media-card secondary gradient-card">
+                        <h3>4.9<span>/5</span></h3>
+                        <p>Average satisfaction score across our pilot communities.</p>
+                    </div>
+                    <blockquote class="about-quote">
+                        <p>“Juvo paired my dad with a companion who now feels like family.”</p>
+                        <cite>— Ananya, Andheri West</cite>
+                    </blockquote>
+                </div>
+            </div>
+
+            <div class="about-metrics" aria-label="Juvo impact stats">
+                <div class="counter-row" aria-hidden="false">
+                    <div class="counter">
+                        <div class="counter-icon">📅</div>
+                        <div class="n" data-target="1240">0</div>
+                        <div class="label">Sessions booked</div>
+                        <div class="counter-bg"></div>
+                    </div>
+                    <div class="counter">
+                        <div class="counter-icon">✓</div>
+                        <div class="n" data-target="980">0</div>
+                        <div class="label">Verified helpers</div>
+                        <div class="counter-bg"></div>
+                    </div>
+                    <div class="counter">
+                        <div class="counter-icon">🌆</div>
+                        <div class="n" data-target="35">0</div>
+                        <div class="label">Cities covered</div>
+                        <div class="counter-bg"></div>
+                    </div>
+                </div>
+                <p class="metrics-note">✨ Stats from our first 90 days serving families in Mumbai.</p>
+            </div>
+
+
+            <div class="tabs" role="tablist" aria-label="Services tabs">
+                <button class="tab-btn" role="tab" aria-selected="true" aria-controls="panel-companions" id="tab-companions">Companions</button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-helpers" id="tab-helpers">Helpers</button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-chefs" id="tab-chefs">Chefs</button>
+            </div>
+
+            <div id="panel-companions" class="tab-panel active" role="tabpanel" aria-labelledby="tab-companions">
+                <div class="roles">
+                    <div class="card">
+                        <img src="juvo-logo.jpg" alt="Walking companion">
+                        <div>
+                            <h3>Walking & Talk</h3>
+                            <p>Find a friendly companion to walk with, play chess, or chat over tea. Safe, verified profiles with reviews.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <img src="juvo-logo.jpg" alt="Hobby partner">
+                        <div>
+                            <h3>Hobby Buddy</h3>
+                            <p>Join for board games, light exercise, reading, or music. Build routine and community.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-helpers" class="tab-panel" role="tabpanel" aria-labelledby="tab-helpers">
+                <div class="roles">
+                    <div class="card">
+                        <img src="juvo-logo.jpg" alt="Chores helper">
+                        <div>
+                            <h3>Chore Help</h3>
+                            <p>Book short sessions for groceries, device setup, organizing, or errands. Clear pricing per task.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <img src="images/groceries.jpg" alt="Errand and transport">
+                        <div>
+                            <h3>Errand & Transport</h3>
+                            <p>Assistance with grocery shopping, medical appointments, bill payments, and other errands. Safe, reliable transport for clients who can’t easily travel alone.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <img src="juvo-logo.jpg" alt="Apply as helper">
+                        <div>
+                            <h3>Apply as Helper</h3>
+                            <p>Upload ID, background info, and availability. Get matched to nearby requests and earn in your free time.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-chefs" class="tab-panel" role="tabpanel" aria-labelledby="tab-chefs">
+                <div class="roles">
+                    <div class="card">
+                        <img src="juvo-logo.jpg" alt="Home chef">
+                        <div>
+                            <h3>Home Chefs</h3>
+                            <p>Hire a vetted chef to cook at your home with your ingredients. Plan menus and dietary preferences ahead.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <img src="juvo-logo.jpg" alt="Meal prep">
+                        <div>
+                            <h3>Meal Prep</h3>
+                            <p>Schedule weekly meal-prep sessions for healthy, simple dishes stored and labeled in your fridge.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-apply" id="apply">
+                <div class="cta-content">
+                    <h3>🚀 Ready to get started?</h3>
+                    <p>After learning about JUVO, create an account to book companions or apply as a helper.</p>
+                </div>
+                <div class="cta-actions">
+                    <a class="btn btn-cta-primary" href="auth.html">Sign up →</a>
+                    <a class="btn btn-cta-secondary" href="auth.html">Log in</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="pricing">
+        <div class="about-inner">
+            <h2 align="center">JUVO+ Pricing</h2>
+            <p align="center">Simple monthly plans for members and helpers. Cancel anytime.</p>
+            <div style="text-align:center; margin:12px 0;">
+                <div class="pricing-toggle" role="tablist" aria-label="Billing cycle">
+                    <button class="billing-btn active" data-billing="monthly">Monthly</button>
+                    <button class="billing-btn" data-billing="yearly">Yearly (save 20%)</button>
+                </div>
+            </div>
+
+            <div class="pricing-grid" id="pricingGrid">
+                <div class="price-card" data-monthly="0" data-yearly="0">
+                    <h3>Free</h3>
+                    <p class="price"><span class="price-amount">₹0</span></p>
+                    <ul>
+                        <li>Browse companions & helpers</li>
+                        <li>Book pay‑as‑you‑go sessions</li>
+                        <li>Basic support</li>
+                    </ul>
+                    <div style="margin-block-start:12px"><a class="btn" href="signup.html">Get started</a></div>
+                </div>
+
+                <div class="price-card highlight" data-monthly="499" data-yearly="4990">
+                    <h3>JUVO+ Member</h3>
+                    <p class="price">₹<span class="price-amount">499</span><span class="per"> / month</span></p>
+                    <ul>
+                        <li>Priority matching</li>
+                        <li>Discounted service fee</li>
+                        <li>Early access to chefs</li>
+                    </ul>
+                    <div style="margin-block-start:12px"><a class="btn" href="login.html">Buy Juvo+</a></div>
+                </div>
+
+                <div class="price-card" data-monthly="299" data-yearly="2990">
+                    <h3>Helper Pro</h3>
+                    <p class="price">₹<span class="price-amount">299</span><span class="per"> / month</span></p>
+                    <ul>
+                        <li>Top placement in search</li>
+                        <li>Pro badge on profile</li>
+                        <li>Dedicated support</li>
+                    </ul>
+                    <div style="margin-block-start:12px"><a class="btn" href="login.html">Apply</a></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section contact-section" id="contact">
+        <div class="section-header">
+            <p class="section-eyebrow">Need a hand?</p>
+            <h2>Let's start a conversation</h2>
+            <p class="section-subtitle">Reach out for support, partnership opportunities, or to join the JUVO community.</p>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-box">
+                <h3 class="contact-title">Get in touch</h3>
+                <form id="contactForm" novalidate>
+                    <input type="text" name="name" placeholder="Your name" required>
+                    <input type="email" name="email" placeholder="Email" required>
+                    <select name="reason" required>
+                        <option value="" disabled selected>Reason for contact</option>
+                        <option value="elder">I need a companion/helper</option>
+                        <option value="errand">I need errand/transport assistance</option>
+                        <option value="apply">I want to apply as helper</option>
+                        <option value="chef">I want a home chef</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <textarea name="message" rows="5" placeholder="Message"></textarea>
+                    <div class="contact-actions">
+                        <button type="submit" class="btn">Send</button>
+                        <div id="formMsg" class="contact-msg" aria-live="polite"></div>
+                    </div>
+                </form>
+
+                <div class="contact-methods" aria-hidden="false">
+                    <div class="contact-method">
+                        <span class="contact-method-icon">📧</span>
+                        <div class="contact-method-body">
+                            <span class="contact-method-title">Email</span>
+                            <span class="contact-method-sub">hello@juvo.in</span>
+                        </div>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-method-icon">📞</span>
+                        <div class="contact-method-body">
+                            <span class="contact-method-title">Phone</span>
+                            <span class="contact-method-sub">+91 9999222211</span>
+                        </div>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-method-icon">📍</span>
+                        <div class="contact-method-body">
+                            <span class="contact-method-title">Office</span>
+                            <span class="contact-method-sub">Andheri West, Mumbai</span>
+                        </div>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-method-icon">🕒</span>
+                        <div class="contact-method-body">
+                            <span class="contact-method-title">Hours</span>
+                            <span class="contact-method-sub">Mon-Fri 9AM-6PM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-box">
+                <h3 class="contact-title">Our Office Location</h3>
+                <div class="map-container">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d60340.37654126754!2d72.79962484863281!3d19.114302699999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c9d20f2e8d!2sAndheri+West%2C+Mumbai%2C+Maharashtra!5e0!3m2!1sen!2sin!4v1234567890123!5m2!1sen!2sin"
+                        width="100%" 
+                        height="320" 
+                        style="border:0; border-radius:12px;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+                <div class="office-info">
+                    <div class="office-details">
+                        <h4 class="office-heading">
+                            <i class="fas fa-map-marker-alt"></i>
+                            JUVO Headquarters
+                        </h4>
+                        <p class="office-sub">Andheri West, Mumbai, Maharashtra 400058</p>
+                        <p class="office-sub">
+                            <i class="fas fa-clock"></i>
+                            Mon-Fri: 9:00 AM - 6:00 PM
+                        </p>
+                    </div>
+                    <div class="office-actions">
+                        <a class="btn" href="https://maps.google.com/?q=Andheri+West+Mumbai" target="_blank">
+                            <i class="fas fa-directions"></i> Get Directions
+                        </a>
+                        <a class="btn btn-muted" href="mailto:hello@juvo.example">
+                            <i class="fas fa-envelope"></i> Email Us
+                        </a>
+                    </div>
+                </div>
+                <p class="office-note">
+                    Providing support across Mumbai and expanding to other cities. Want us in your city? Let us know.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h3>JUVO</h3>
+                <p>Connecting workers with opportunities that matter.</p>
+            </div>
+
+            <div class="footer-center">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Support</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-right">
+                <h4>Contact Us</h4>
+                <p><i class="fas fa-envelope"></i> hello@juvo.in</p>
+                <p><i class="fas fa-phone"></i> +91 9999222211</p>
+                <p><i class="fas fa-map-marker-alt"></i> Andheri West, Mumbai</p>
+                <div class="socials">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-x-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            © <span id="year"></span> JUVO. Be the Care You Trust.
+        </div>
+    </footer>
+
+    <!-- FIXED: Remove broken script src, add correct Three.js -->
+    <script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
